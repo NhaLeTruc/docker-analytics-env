@@ -1,0 +1,110 @@
+x-airflow-common: &airflow-common
+  build:
+    context: ./airflow
+    dockerfile: Dockerfile.airflow
+    args:
+      - AIRFLOW_VERSION=2.10.3
+  environment:
+    - PYTHONPATH=/opt/airflow
+    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres-airflow/${POSTGRES_AIRFLOW_DB}
+    - AIRFLOW__CORE__LOAD_EXAMPLES=false
+    - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_FERNET_KEY}
+    - _AIRFLOW_WWW_USER_CREATE=True
+    - _AIRFLOW_WWW_USER_USERNAME=${AIRFLOW_ADMIN_USER}
+    - _AIRFLOW_WWW_USER_PASSWORD=${AIRFLOW_ADMIN_PASSWORD}
+    - _AIRFLOW_WWW_USER_ROLE=Admin
+    - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+    - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
+    - ./airflow/include:/opt/airflow/include
+    - ./airflow/data:/opt/airflow/data
+    - ./dqops_userhome/.data:/data
+  networks:
+    - dqops_lakehouse_network
+  depends_on:
+    postgres-airflow:
+      condition: service_healthy
+    minio:
+      condition: service_healthy
+
+
+services:
+  postgres-airflow:
+    image: postgres:16
+    container_name: postgres-airflow
+    environment:
+      - POSTGRES_USER=${POSTGRES_AIRFLOW_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_AIRFLOW_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_AIRFLOW_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - airflow_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_AIRFLOW_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dqops_lakehouse_network
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db init && \
+        airflow users create \
+          --username ${AIRFLOW_ADMIN_USER:-admin} \
+          --firstname ${AIRFLOW_ADMIN_FIRSTNAME:-Admin} \
+          --lastname ${AIRFLOW_ADMIN_LASTNAME:-User} \
+          --role Admin \
+          --email ${AIRFLOW_ADMIN_EMAIL:-admin@example.com} \
+          --password ${AIRFLOW_ADMIN_PASSWORD:-admin}
+    restart: on-failure
+    networks:
+      - dqops_lakehouse_network
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow-webserver
+    command: airflow webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - dqops_lakehouse_network
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+    restart: always
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - dqops_lakehouse_network
+
+volumes:
+  airflow_db_data:
+
+networks:
+  dqops_lakehouse_network: 

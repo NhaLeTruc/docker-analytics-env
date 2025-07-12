@@ -1,0 +1,19 @@
+# Environments
+*.env
+
+# Docker
+superset_data/
+mariadb-data/
+minio-data/
+
+# Logs
+airflow/logs
+**/*.log
+
+# Data
+**/*.parquet
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints

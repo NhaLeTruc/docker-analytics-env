@@ -1,0 +1,3 @@
+PyHive[hive]
+psycopg2-binary
+Pillow

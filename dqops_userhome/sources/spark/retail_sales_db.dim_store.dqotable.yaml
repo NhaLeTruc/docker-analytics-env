@@ -1,0 +1,393 @@
+# yaml-language-server: $schema=https://cloud.dqops.com/dqo-yaml-schema/TableYaml-schema.json
+apiVersion: dqo/v1
+kind: table
+spec:
+  incremental_time_window:
+    daily_partitioning_recent_days: 7
+    monthly_partitioning_recent_months: 1
+  profiling_checks:
+    volume:
+      profile_row_count:
+        error:
+          min_count: 90
+    schema:
+      profile_column_count:
+        error:
+          expected_value: 4
+  monitoring_checks:
+    daily:
+      volume:
+        daily_row_count:
+          error:
+            min_count: 90
+      schema:
+        daily_column_count:
+          error:
+            expected_value: 4
+  columns:
+    store_id:
+      type_snapshot:
+        column_type: BIGINT
+        nullable: true
+      id: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 90
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 100.0
+              max_percent: 100.0
+          profile_duplicate_count:
+            error:
+              max_count: 0
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 90.0
+              to: 110.0
+          profile_mean_in_range:
+            error:
+              from: 45.4
+              to: 55.5
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 45.4
+              to: 55.5
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 90
+          uniqueness:
+            daily_distinct_percent:
+              error:
+                min_percent: 100.0
+                max_percent: 100.0
+            daily_duplicate_count:
+              error:
+                max_count: 0
+          numeric:
+            daily_min_in_range:
+              error:
+                from: 0.9
+                to: 1.1
+            daily_max_in_range:
+              error:
+                from: 90.0
+                to: 110.0
+            daily_mean_in_range:
+              error:
+                from: 45.4
+                to: 55.5
+            daily_median_in_range:
+              parameters:
+                percentile_value: 0.5
+              error:
+                from: 45.4
+                to: 55.5
+    store_name:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      id: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 90
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 100.0
+              max_percent: 100.0
+          profile_duplicate_count:
+            error:
+              max_count: 0
+        text:
+          profile_text_min_length:
+            error:
+              from: 9
+              to: 9
+          profile_text_max_length:
+            error:
+              from: 9
+              to: 9
+          profile_text_mean_length:
+            error:
+              from: 8.1
+              to: 9.9
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+ [0-9]+)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 90
+          uniqueness:
+            daily_distinct_percent:
+              error:
+                min_percent: 100.0
+                max_percent: 100.0
+            daily_duplicate_count:
+              error:
+                max_count: 0
+          text:
+            daily_text_min_length:
+              error:
+                from: 9
+                to: 9
+            daily_text_max_length:
+              error:
+                from: 9
+                to: 9
+            daily_text_mean_length:
+              error:
+                from: 8.1
+                to: 9.9
+          patterns:
+            daily_texts_not_matching_regex_percent:
+              parameters:
+                regex: "^([A-Za-z]+ [0-9]+)$"
+              error:
+                max_percent: 0.0
+          pii:
+            daily_contains_usa_phone_percent:
+              error:
+                max_percent: 0.0
+            daily_contains_email_percent:
+              error:
+                max_percent: 0.0
+          datatype:
+            daily_detected_datatype_in_text:
+              error:
+                expected_datatype: texts
+    store_city:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 90
+        text:
+          profile_text_min_length:
+            error:
+              from: 6
+              to: 6
+          profile_text_max_length:
+            error:
+              from: 12
+              to: 14
+          profile_text_mean_length:
+            error:
+              from: 8.28
+              to: 10.1
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+( [A-Za-z]+)?)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 90
+          text:
+            daily_text_min_length:
+              error:
+                from: 6
+                to: 6
+            daily_text_max_length:
+              error:
+                from: 12
+                to: 14
+            daily_text_mean_length:
+              error:
+                from: 8.28
+                to: 10.1
+          patterns:
+            daily_texts_not_matching_regex_percent:
+              parameters:
+                regex: "^([A-Za-z]+( [A-Za-z]+)?)$"
+              error:
+                max_percent: 0.0
+          pii:
+            daily_contains_usa_phone_percent:
+              error:
+                max_percent: 0.0
+            daily_contains_email_percent:
+              error:
+                max_percent: 0.0
+          datatype:
+            daily_detected_datatype_in_text:
+              error:
+                expected_datatype: texts
+    store_state:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 90
+        accepted_values:
+          profile_expected_texts_in_top_values_count:
+            parameters:
+              expected_values:
+              - TX
+              - CA
+              top: 2
+            error:
+              max_missing: 0
+        text:
+          profile_text_min_length:
+            error:
+              from: 2
+              to: 2
+          profile_text_max_length:
+            error:
+              from: 2
+              to: 2
+          profile_text_mean_length:
+            error:
+              from: 1.8
+              to: 2.2
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 90
+          accepted_values:
+            daily_expected_texts_in_top_values_count:
+              parameters:
+                expected_values:
+                - TX
+                - CA
+                top: 2
+              error:
+                max_missing: 0
+          text:
+            daily_text_min_length:
+              error:
+                from: 2
+                to: 2
+            daily_text_max_length:
+              error:
+                from: 2
+                to: 2
+            daily_text_mean_length:
+              error:
+                from: 1.8
+                to: 2.2
+          pii:
+            daily_contains_usa_phone_percent:
+              error:
+                max_percent: 0.0
+            daily_contains_email_percent:
+              error:
+                max_percent: 0.0
+          datatype:
+            daily_detected_datatype_in_text:
+              error:
+                expected_datatype: texts

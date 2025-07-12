@@ -1,0 +1,1200 @@
+# yaml-language-server: $schema=https://cloud.dqops.com/dqo-yaml-schema/TableYaml-schema.json
+apiVersion: dqo/v1
+kind: table
+spec:
+  incremental_time_window:
+    daily_partitioning_recent_days: 7
+    monthly_partitioning_recent_months: 1
+  profiling_checks:
+    volume:
+      profile_row_count:
+        error:
+          min_count: 26537
+    schema:
+      profile_column_count:
+        error:
+          expected_value: 21
+  columns:
+    transaction_id:
+      type_snapshot:
+        column_type: BIGINT
+        nullable: true
+      id: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 100.0
+              max_percent: 100.0
+          profile_duplicate_count:
+            error:
+              max_count: 0
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 90000.0
+              to: 110000.0
+          profile_mean_in_range:
+            error:
+              from: 44900.0
+              to: 54900.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 44900.0
+              to: 54800.0
+    transaction_timestamp:
+      type_snapshot:
+        column_type: TIMESTAMP
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 93.7
+              max_percent: 96.6
+        datetime:
+          profile_date_in_range_percent:
+            parameters:
+              min_date: 1999-01-13
+              max_date: 2035-02-28
+            error:
+              min_percent: 100.0
+    quantity:
+      type_snapshot:
+        column_type: INT
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 9
+              max_count: 11
+        accepted_values:
+          profile_number_found_in_set_percent:
+            parameters:
+              expected_values:
+              - 6
+              - 5
+              - 3
+              - 9
+              - 7
+              - 8
+              - 1
+              - 2
+              - 4
+              - 10
+            error:
+              min_percent: 100.0
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 9.0
+              to: 11.0
+          profile_mean_in_range:
+            error:
+              from: 4.94
+              to: 6.03
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 5.4
+              to: 6.6
+    unit_price:
+      type_snapshot:
+        column_type: DOUBLE
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 6.75
+              to: 8.26
+          profile_max_in_range:
+            error:
+              from: 446.0
+              to: 546.0
+          profile_mean_in_range:
+            error:
+              from: 226.0
+              to: 276.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 232.0
+              to: 284.0
+    total_amount:
+      type_snapshot:
+        column_type: DOUBLE
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 11.8
+              max_percent: 21.9
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 6.75
+              to: 8.26
+          profile_max_in_range:
+            error:
+              from: 4460.0
+              to: 5460.0
+          profile_mean_in_range:
+            error:
+              from: 1240.0
+              to: 1520.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 945.0
+              to: 1150.0
+    payment_method:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 11
+              max_count: 13
+        accepted_values:
+          profile_text_found_in_set_percent:
+            parameters:
+              expected_values:
+              - Cash
+              - Gift Card
+              - Credit Card
+              - Debit Card
+              - Mobile Wallet
+              - '  Mobile Wallet  '
+              - '  Gift Card  '
+              - '  Cash  '
+              - '  Debit Card  '
+              - '  Credit Card  '
+            error:
+              min_percent: 100.0
+          profile_expected_texts_in_top_values_count:
+            parameters:
+              expected_values:
+              - Cash
+              - Gift Card
+              - Credit Card
+              - Debit Card
+              - Mobile Wallet
+              top: 5
+            error:
+              max_missing: 0
+        text:
+          profile_text_min_length:
+            error:
+              from: 4
+              to: 4
+          profile_text_max_length:
+            error:
+              from: 16
+              to: 18
+          profile_text_mean_length:
+            error:
+              from: 8.89
+              to: 10.8
+        whitespace:
+          profile_text_surrounded_by_whitespace_percent:
+            error:
+              max_percent: 0.0
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+( [A-Za-z]+)?| +[A-Za-z]+ +([A-Za-z]+ +)?)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    customer_id:
+      type_snapshot:
+        column_type: BIGINT
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 22.4
+              max_percent: 41.7
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 9000.0
+              to: 11000.0
+          profile_mean_in_range:
+            error:
+              from: 4500.0
+              to: 5500.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 4520.0
+              to: 5520.0
+    customer_name:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        text:
+          profile_text_min_length:
+            error:
+              from: 9
+              to: 11
+          profile_text_max_length:
+            error:
+              from: 23
+              to: 27
+          profile_text_mean_length:
+            error:
+              from: 12.2
+              to: 14.9
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+ [A-Za-z]+)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    customer_gender:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 6
+              max_count: 6
+        accepted_values:
+          profile_text_found_in_set_percent:
+            parameters:
+              expected_values:
+              - Male
+              - Other
+              - Female
+              - '  Male  '
+              - '  Other  '
+              - '  Female  '
+            error:
+              min_percent: 100.0
+          profile_expected_texts_in_top_values_count:
+            parameters:
+              expected_values:
+              - Male
+              - Other
+              - Female
+              top: 3
+            error:
+              max_missing: 0
+        text:
+          profile_text_min_length:
+            error:
+              from: 4
+              to: 4
+          profile_text_max_length:
+            error:
+              from: 9
+              to: 11
+          profile_text_mean_length:
+            error:
+              from: 4.95
+              to: 6.05
+        whitespace:
+          profile_text_surrounded_by_whitespace_percent:
+            error:
+              max_percent: 0.0
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+| +[A-Za-z]+ +)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    customer_dob:
+      type_snapshot:
+        column_type: DATE
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 18.7
+              max_percent: 34.9
+        datetime:
+          profile_date_in_range_percent:
+            parameters:
+              min_date: 1954-12-31
+              max_date: 2033-03-11
+            error:
+              min_percent: 100.0
+    customer_email:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 22.4
+              max_percent: 41.7
+        text:
+          profile_text_min_length:
+            error:
+              from: 19
+              to: 23
+          profile_text_max_length:
+            error:
+              from: 23
+              to: 27
+          profile_text_mean_length:
+            error:
+              from: 21.5
+              to: 26.2
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z0-9]+@[a-z]+\\.[a-z]+)$"
+            error:
+              max_percent: 0.0
+          profile_invalid_email_format_percent:
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    customer_phone:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 22.2
+              max_percent: 41.2
+        accepted_values:
+          profile_expected_texts_in_top_values_count:
+            parameters:
+              expected_values:
+              - 1234567890
+              top: 1
+            error:
+              max_missing: 0
+        text:
+          profile_text_min_length:
+            error:
+              from: 9
+              to: 11
+          profile_text_max_length:
+            error:
+              from: 10
+              to: 12
+          profile_text_mean_length:
+            error:
+              from: 9.84
+              to: 12.0
+        conversions:
+          profile_text_parsable_to_integer_percent:
+            error:
+              min_percent: 100.0
+          profile_text_parsable_to_float_percent:
+            error:
+              min_percent: 100.0
+        patterns:
+          profile_invalid_usa_phone_format_percent:
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 1.08E10
+              to: 1.32E10
+          profile_max_in_range:
+            error:
+              from: 1.79E10
+              to: 2.19E10
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: integers
+    customer_city:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 36
+              max_count: 44
+        accepted_values:
+          profile_text_found_in_set_percent:
+            parameters:
+              expected_values:
+              - San Antonio
+              - Philadelphia
+              - Los Angeles
+              - San Jose
+              - Fort Worth
+              - Washington
+              - Indianapolis
+              - Charlotte
+              - Houston
+              - Dallas
+              - New York
+              - Jacksonville
+              - Denver
+              - Columbus
+              - Chicago
+              - San Diego
+              - Austin
+              - San Francisco
+              - Phoenix
+              - Seattle
+              - '  Austin  '
+              - '  San Diego  '
+              - '  New York  '
+              - '  Washington  '
+              - '  San Jose  '
+              - '  Indianapolis  '
+              - '  Philadelphia  '
+              - '  Houston  '
+              - '  Denver  '
+              - '  San Antonio  '
+              - '  Columbus  '
+              - '  Fort Worth  '
+              - '  Jacksonville  '
+              - '  Seattle  '
+              - '  San Francisco  '
+              - '  Dallas  '
+              - '  Phoenix  '
+            error:
+              min_percent: 100.0
+        text:
+          profile_text_min_length:
+            error:
+              from: 6
+              to: 6
+          profile_text_max_length:
+            error:
+              from: 16
+              to: 18
+          profile_text_mean_length:
+            error:
+              from: 8.54
+              to: 10.4
+        whitespace:
+          profile_text_surrounded_by_whitespace_percent:
+            error:
+              max_percent: 0.0
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+( [A-Za-z]+)?| +[A-Za-z]+ +([A-Za-z]+ +)?)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    customer_state:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 24
+              max_count: 28
+        accepted_values:
+          profile_text_found_in_set_percent:
+            parameters:
+              expected_values:
+              - TX
+              - CA
+              - PA
+              - DC
+              - IN
+              - NY
+              - NC
+              - FL
+              - OH
+              - CO
+              - AZ
+              - IL
+              - WA
+              - '  TX  '
+              - '  CA  '
+              - '  CO  '
+              - '  OH  '
+              - '  DC  '
+              - '  IL  '
+              - '  NY  '
+              - '  IN  '
+              - '  PA  '
+              - '  NC  '
+            error:
+              min_percent: 100.0
+          profile_expected_texts_in_top_values_count:
+            parameters:
+              expected_values:
+              - TX
+              - CA
+              top: 2
+            error:
+              max_missing: 0
+        text:
+          profile_text_min_length:
+            error:
+              from: 2
+              to: 2
+          profile_text_max_length:
+            error:
+              from: 6
+              to: 6
+          profile_text_mean_length:
+            error:
+              from: 2.25
+              to: 2.75
+        whitespace:
+          profile_text_surrounded_by_whitespace_percent:
+            error:
+              max_percent: 0.0
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Z]+| +[A-Z]+ +)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    store_id:
+      type_snapshot:
+        column_type: BIGINT
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 90
+              max_count: 110
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 90.0
+              to: 110.0
+          profile_mean_in_range:
+            error:
+              from: 45.3
+              to: 55.4
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 45.0
+              to: 55.0
+    store_name:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 180
+              max_count: 220
+        text:
+          profile_text_min_length:
+            error:
+              from: 9
+              to: 9
+          profile_text_max_length:
+            error:
+              from: 12
+              to: 14
+          profile_text_mean_length:
+            error:
+              from: 8.57
+              to: 10.4
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+ [0-9]+)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    store_city:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 35
+              max_count: 41
+        accepted_values:
+          profile_text_found_in_set_percent:
+            parameters:
+              expected_values:
+              - Washington
+              - Seattle
+              - Fort Worth
+              - Charlotte
+              - Columbus
+              - San Diego
+              - San Francisco
+              - Los Angeles
+              - Dallas
+              - San Antonio
+              - Phoenix
+              - Jacksonville
+              - Houston
+              - Indianapolis
+              - Chicago
+              - Denver
+              - Philadelphia
+              - New York
+              - '  Washington  '
+              - '  Seattle  '
+              - '  Charlotte  '
+              - '  Dallas  '
+              - '  Fort Worth  '
+              - '  San Francisco  '
+              - '  Los Angeles  '
+              - San Jose
+              - '  San Antonio  '
+              - '  San Diego  '
+              - '  Columbus  '
+              - '  Jacksonville  '
+              - '  Phoenix  '
+              - '  Chicago  '
+              - '  Denver  '
+            error:
+              min_percent: 100.0
+        text:
+          profile_text_min_length:
+            error:
+              from: 6
+              to: 6
+          profile_text_max_length:
+            error:
+              from: 16
+              to: 18
+          profile_text_mean_length:
+            error:
+              from: 8.74
+              to: 10.6
+        whitespace:
+          profile_text_surrounded_by_whitespace_percent:
+            error:
+              max_percent: 0.0
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+( [A-Za-z]+)?| +[A-Za-z]+ +([A-Za-z]+ +)?)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    store_state:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 24
+              max_count: 28
+        accepted_values:
+          profile_text_found_in_set_percent:
+            parameters:
+              expected_values:
+              - TX
+              - CA
+              - DC
+              - WA
+              - NC
+              - OH
+              - FL
+              - AZ
+              - IL
+              - IN
+              - CO
+              - '  TX  '
+              - PA
+              - '  CA  '
+              - NY
+              - '  DC  '
+              - '  WA  '
+              - '  NC  '
+              - '  OH  '
+              - '  AZ  '
+              - '  FL  '
+              - '  CO  '
+            error:
+              min_percent: 100.0
+          profile_expected_texts_in_top_values_count:
+            parameters:
+              expected_values:
+              - TX
+              - CA
+              top: 2
+            error:
+              max_missing: 0
+        text:
+          profile_text_min_length:
+            error:
+              from: 2
+              to: 2
+          profile_text_max_length:
+            error:
+              from: 6
+              to: 6
+          profile_text_mean_length:
+            error:
+              from: 2.25
+              to: 2.75
+        whitespace:
+          profile_text_surrounded_by_whitespace_percent:
+            error:
+              max_percent: 0.0
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Z]+| +[A-Z]+ +)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    product_id:
+      type_snapshot:
+        column_type: BIGINT
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 450.0
+              to: 550.0
+          profile_mean_in_range:
+            error:
+              from: 226.0
+              to: 276.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 227.0
+              to: 278.0
+    product_name:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        text:
+          profile_text_min_length:
+            error:
+              from: 11
+              to: 13
+          profile_text_max_length:
+            error:
+              from: 15
+              to: 17
+          profile_text_mean_length:
+            error:
+              from: 11.2
+              to: 13.7
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+ [0-9]+)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+    product_category:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 9
+              max_count: 11
+        accepted_values:
+          profile_text_found_in_set_percent:
+            parameters:
+              expected_values:
+              - Beauty
+              - Garden
+              - Automotive
+              - Electronics
+              - Groceries
+              - Toys
+              - Clothing
+              - Sports
+              - Home
+              - Books
+            error:
+              min_percent: 100.0
+        text:
+          profile_text_min_length:
+            error:
+              from: 4
+              to: 4
+          profile_text_max_length:
+            error:
+              from: 10
+              to: 12
+          profile_text_mean_length:
+            error:
+              from: 6.32
+              to: 7.73
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts

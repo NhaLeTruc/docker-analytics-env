@@ -1,0 +1,20 @@
+# Kết nối MinIO qua S3A
+spark.hadoop.fs.s3a.endpoint=http://minio:9000
+spark.hadoop.fs.s3a.access.key=minioadmin
+spark.hadoop.fs.s3a.secret.key=minioadmin
+spark.hadoop.fs.s3a.path.style.access=true
+spark.hadoop.fs.s3a.connection.ssl.enabled=false
+spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem
+
+# Delta Lake extensions
+spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension
+spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
+
+# Hive Metastore configuration
+spark.hadoop.hive.metastore.uris=thrift://hive-metastore:9083
+spark.sql.catalogImplementation=hive
+
+# JAR Packages for Delta and S3
+spark.jars.packages io.delta:delta-spark_2.12:3.2.0,org.apache.hadoop:hadoop-aws:3.3.4
+# hoặc
+org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262,io.delta:delta-spark_2.12:3.1.0

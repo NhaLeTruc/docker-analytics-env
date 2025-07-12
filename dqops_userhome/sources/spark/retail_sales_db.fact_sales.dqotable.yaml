@@ -1,0 +1,743 @@
+# yaml-language-server: $schema=https://cloud.dqops.com/dqo-yaml-schema/TableYaml-schema.json
+apiVersion: dqo/v1
+kind: table
+spec:
+  incremental_time_window:
+    daily_partitioning_recent_days: 7
+    monthly_partitioning_recent_months: 1
+  profiling_checks:
+    volume:
+      profile_row_count:
+        error:
+          min_count: 26537
+    schema:
+      profile_column_count:
+        error:
+          expected_value: 9
+  monitoring_checks:
+    daily:
+      volume:
+        daily_row_count:
+          error:
+            min_count: 26537
+      schema:
+        daily_column_count:
+          error:
+            expected_value: 9
+  columns:
+    transaction_id:
+      type_snapshot:
+        column_type: BIGINT
+        nullable: true
+      id: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 100.0
+              max_percent: 100.0
+          profile_duplicate_count:
+            error:
+              max_count: 0
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 90000.0
+              to: 110000.0
+          profile_mean_in_range:
+            error:
+              from: 44900.0
+              to: 54900.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 44900.0
+              to: 54800.0
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 26500
+          uniqueness:
+            daily_distinct_percent:
+              error:
+                min_percent: 100.0
+                max_percent: 100.0
+            daily_duplicate_count:
+              error:
+                max_count: 0
+          numeric:
+            daily_min_in_range:
+              error:
+                from: 0.9
+                to: 1.1
+            daily_max_in_range:
+              error:
+                from: 90000.0
+                to: 110000.0
+            daily_mean_in_range:
+              error:
+                from: 44900.0
+                to: 54900.0
+            daily_median_in_range:
+              parameters:
+                percentile_value: 0.5
+              error:
+                from: 44900.0
+                to: 54800.0
+    transaction_timestamp:
+      type_snapshot:
+        column_type: TIMESTAMP
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 93.7
+              max_percent: 96.6
+        datetime:
+          profile_date_in_range_percent:
+            parameters:
+              min_date: 1999-01-13
+              max_date: 2035-02-28
+            error:
+              min_percent: 100.0
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 26500
+          uniqueness:
+            daily_distinct_percent:
+              error:
+                min_percent: 93.7
+                max_percent: 96.6
+          datetime:
+            daily_date_in_range_percent:
+              parameters:
+                min_date: 1999-01-13
+                max_date: 2035-02-28
+              error:
+                min_percent: 100.0
+    quantity:
+      type_snapshot:
+        column_type: INT
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 9
+              max_count: 11
+        accepted_values:
+          profile_number_found_in_set_percent:
+            parameters:
+              expected_values:
+              - 6
+              - 5
+              - 3
+              - 9
+              - 7
+              - 8
+              - 1
+              - 2
+              - 4
+              - 10
+            error:
+              min_percent: 100.0
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 9.0
+              to: 11.0
+          profile_mean_in_range:
+            error:
+              from: 4.94
+              to: 6.03
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 5.4
+              to: 6.6
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 26500
+          uniqueness:
+            daily_distinct_count:
+              error:
+                min_count: 9
+                max_count: 11
+          accepted_values:
+            daily_number_found_in_set_percent:
+              parameters:
+                expected_values:
+                - 6
+                - 5
+                - 3
+                - 9
+                - 7
+                - 8
+                - 1
+                - 2
+                - 4
+                - 10
+              error:
+                min_percent: 100.0
+          numeric:
+            daily_min_in_range:
+              error:
+                from: 0.9
+                to: 1.1
+            daily_max_in_range:
+              error:
+                from: 9.0
+                to: 11.0
+            daily_mean_in_range:
+              error:
+                from: 4.94
+                to: 6.03
+            daily_median_in_range:
+              parameters:
+                percentile_value: 0.5
+              error:
+                from: 5.4
+                to: 6.6
+    unit_price:
+      type_snapshot:
+        column_type: DOUBLE
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 6.75
+              to: 8.26
+          profile_max_in_range:
+            error:
+              from: 446.0
+              to: 546.0
+          profile_mean_in_range:
+            error:
+              from: 226.0
+              to: 276.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 232.0
+              to: 284.0
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 26500
+          numeric:
+            daily_min_in_range:
+              error:
+                from: 6.75
+                to: 8.26
+            daily_max_in_range:
+              error:
+                from: 446.0
+                to: 546.0
+            daily_mean_in_range:
+              error:
+                from: 226.0
+                to: 276.0
+            daily_median_in_range:
+              parameters:
+                percentile_value: 0.5
+              error:
+                from: 232.0
+                to: 284.0
+    total_amount:
+      type_snapshot:
+        column_type: DOUBLE
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 11.8
+              max_percent: 21.9
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 6.75
+              to: 8.26
+          profile_max_in_range:
+            error:
+              from: 4460.0
+              to: 5460.0
+          profile_mean_in_range:
+            error:
+              from: 1240.0
+              to: 1520.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 945.0
+              to: 1150.0
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 26500
+          uniqueness:
+            daily_distinct_percent:
+              error:
+                min_percent: 11.8
+                max_percent: 21.9
+          numeric:
+            daily_min_in_range:
+              error:
+                from: 6.75
+                to: 8.26
+            daily_max_in_range:
+              error:
+                from: 4460.0
+                to: 5460.0
+            daily_mean_in_range:
+              error:
+                from: 1240.0
+                to: 1520.0
+            daily_median_in_range:
+              parameters:
+                percentile_value: 0.5
+              error:
+                from: 945.0
+                to: 1150.0
+    payment_method:
+      type_snapshot:
+        column_type: STRING
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 6
+              max_count: 6
+        accepted_values:
+          profile_expected_texts_in_top_values_count:
+            parameters:
+              expected_values:
+              - Cash
+              - Gift Card
+              - Credit Card
+              - Debit Card
+              - Mobile Wallet
+              top: 5
+            error:
+              max_missing: 0
+        text:
+          profile_text_min_length:
+            error:
+              from: 4
+              to: 4
+          profile_text_max_length:
+            error:
+              from: 12
+              to: 14
+          profile_text_mean_length:
+            error:
+              from: 8.42
+              to: 10.2
+        patterns:
+          profile_texts_not_matching_regex_percent:
+            parameters:
+              regex: "^([A-Za-z]+( [A-Za-z]+)?)$"
+            error:
+              max_percent: 0.0
+        pii:
+          profile_contains_usa_phone_percent:
+            error:
+              max_percent: 0.0
+          profile_contains_email_percent:
+            error:
+              max_percent: 0.0
+        datatype:
+          profile_detected_datatype_in_text:
+            error:
+              expected_datatype: texts
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 26500
+          uniqueness:
+            daily_distinct_count:
+              error:
+                min_count: 6
+                max_count: 6
+          accepted_values:
+            daily_expected_texts_in_top_values_count:
+              parameters:
+                expected_values:
+                - Cash
+                - Gift Card
+                - Credit Card
+                - Debit Card
+                - Mobile Wallet
+                top: 5
+              error:
+                max_missing: 0
+          text:
+            daily_text_min_length:
+              error:
+                from: 4
+                to: 4
+            daily_text_max_length:
+              error:
+                from: 12
+                to: 14
+            daily_text_mean_length:
+              error:
+                from: 8.42
+                to: 10.2
+          patterns:
+            daily_texts_not_matching_regex_percent:
+              parameters:
+                regex: "^([A-Za-z]+( [A-Za-z]+)?)$"
+              error:
+                max_percent: 0.0
+          pii:
+            daily_contains_usa_phone_percent:
+              error:
+                max_percent: 0.0
+            daily_contains_email_percent:
+              error:
+                max_percent: 0.0
+          datatype:
+            daily_detected_datatype_in_text:
+              error:
+                expected_datatype: texts
+    customer_id:
+      type_snapshot:
+        column_type: BIGINT
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_percent:
+            error:
+              min_percent: 22.4
+              max_percent: 41.7
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 9000.0
+              to: 11000.0
+          profile_mean_in_range:
+            error:
+              from: 4500.0
+              to: 5500.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 4520.0
+              to: 5520.0
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 26500
+          uniqueness:
+            daily_distinct_percent:
+              error:
+                min_percent: 22.4
+                max_percent: 41.7
+          numeric:
+            daily_min_in_range:
+              error:
+                from: 0.9
+                to: 1.1
+            daily_max_in_range:
+              error:
+                from: 9000.0
+                to: 11000.0
+            daily_mean_in_range:
+              error:
+                from: 4500.0
+                to: 5500.0
+            daily_median_in_range:
+              parameters:
+                percentile_value: 0.5
+              error:
+                from: 4520.0
+                to: 5520.0
+    store_id:
+      type_snapshot:
+        column_type: BIGINT
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        uniqueness:
+          profile_distinct_count:
+            error:
+              min_count: 90
+              max_count: 110
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 90.0
+              to: 110.0
+          profile_mean_in_range:
+            error:
+              from: 45.3
+              to: 55.4
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 45.0
+              to: 55.0
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 26500
+          uniqueness:
+            daily_distinct_count:
+              error:
+                min_count: 90
+                max_count: 110
+          numeric:
+            daily_min_in_range:
+              error:
+                from: 0.9
+                to: 1.1
+            daily_max_in_range:
+              error:
+                from: 90.0
+                to: 110.0
+            daily_mean_in_range:
+              error:
+                from: 45.3
+                to: 55.4
+            daily_median_in_range:
+              parameters:
+                percentile_value: 0.5
+              error:
+                from: 45.0
+                to: 55.0
+    product_id:
+      type_snapshot:
+        column_type: BIGINT
+        nullable: true
+      profiling_checks:
+        nulls:
+          profile_nulls_count:
+            error:
+              max_count: 0
+          profile_nulls_percent:
+            error:
+              max_percent: 0.0
+          profile_not_nulls_count:
+            error:
+              min_count: 26500
+        numeric:
+          profile_min_in_range:
+            error:
+              from: 0.9
+              to: 1.1
+          profile_max_in_range:
+            error:
+              from: 450.0
+              to: 550.0
+          profile_mean_in_range:
+            error:
+              from: 226.0
+              to: 276.0
+          profile_median_in_range:
+            parameters:
+              percentile_value: 0.5
+            error:
+              from: 227.0
+              to: 278.0
+      monitoring_checks:
+        daily:
+          nulls:
+            daily_nulls_count:
+              error:
+                max_count: 0
+            daily_nulls_percent:
+              error:
+                max_percent: 0.0
+            daily_not_nulls_count:
+              error:
+                min_count: 26500
+          numeric:
+            daily_min_in_range:
+              error:
+                from: 0.9
+                to: 1.1
+            daily_max_in_range:
+              error:
+                from: 450.0
+                to: 550.0
+            daily_mean_in_range:
+              error:
+                from: 226.0
+                to: 276.0
+            daily_median_in_range:
+              parameters:
+                percentile_value: 0.5
+              error:
+                from: 227.0
+                to: 278.0
