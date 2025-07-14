@@ -15,7 +15,7 @@ services:
       test: ["CMD", "mc", "ready", "local"]
       interval: 10s
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   mariadb:
     image: mariadb:latest
@@ -33,7 +33,7 @@ services:
     volumes:
       - mariadb-data:/var/lib/mysql
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   hive-metastore:
     build: ./hive
@@ -55,7 +55,7 @@ services:
       retries: 5
       start_period: 30s 
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   spark:
     build:
@@ -80,7 +80,7 @@ services:
       - ./airflow/data:/opt/airflow/data
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   spark-worker:
     build:
@@ -110,7 +110,7 @@ services:
           cpus: '2.0'
           memory: 4G
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   spark-worker-2:
     build:
@@ -140,7 +140,7 @@ services:
           cpus: '2.0'
           memory: 4G
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   spark-thrift:
     build:
@@ -164,7 +164,7 @@ services:
       spark:
         condition: service_started
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   db:
     image: postgres:16
@@ -179,8 +179,7 @@ services:
     volumes:
       - superset_db_data:/var/lib/postgresql/data
     networks:
-      - dqops_lakehouse_network
-
+      - lakehouse_network
 
   superset:
     image: apache/superset:latest
@@ -202,7 +201,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   dqops:
     image: dqops/dqo
@@ -213,10 +212,10 @@ services:
     volumes:
       - ./dqops_userhome:/dqo/userhome
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
 networks:
-  dqops_lakehouse_network:
+  lakehouse_network:
     driver: bridge
 
 volumes:

@@ -24,7 +24,7 @@ x-airflow-common: &airflow-common
     - ./airflow/data:/opt/airflow/data
     - ./dqops_userhome/.data:/data
   networks:
-    - dqops_lakehouse_network
+    - lakehouse_network
   depends_on:
     postgres-airflow:
       condition: service_healthy
@@ -50,7 +50,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   airflow-init:
     <<: *airflow-common
@@ -69,7 +69,7 @@ services:
           --password ${AIRFLOW_ADMIN_PASSWORD:-admin}
     restart: on-failure
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
     depends_on:
       postgres-airflow:
         condition: service_healthy
@@ -90,7 +90,7 @@ services:
       airflow-init:
         condition: service_completed_successfully
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
   airflow-scheduler:
     <<: *airflow-common
@@ -101,10 +101,10 @@ services:
       airflow-init:
         condition: service_completed_successfully
     networks:
-      - dqops_lakehouse_network
+      - lakehouse_network
 
 volumes:
   airflow_db_data:
 
 networks:
-  dqops_lakehouse_network: 
+  lakehouse_network: 
