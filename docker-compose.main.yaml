@@ -1,4 +1,5 @@
 services:
+  # Minio Storage Server
   minio:
     image: minio/minio:RELEASE.2025-05-24T17-08-30Z-cpuv1
     container_name: minio
@@ -9,51 +10,91 @@ services:
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Web console
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     volumes:
       - minio-data:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
+      - ./data_seeder:/seed
+      - ./minio:/user_data
+    entrypoint: >
+      /bin/sh -c "
+      minio server /data --console-address ':9001' &
+      sleep 5;
+      mc alias set myminio http://localhost:9000 ${MINIO_USER_USERNAME} ${MINIO_USER_PASSWORD};
+      mc admin accesskey create myminio/ --access-key ${AWS_ACCESS_KEY_ID} --secret-key ${AWS_SECRET_ACCESS_KEY} --description 'Access key for docker environment';
+      mc mb myminio/seed;
+      mc cp -r /seed/* myminio/seed/;
+      mc mb myminio/${NESSIE_BUCKET};
+      mc mb myminio/${UNITY_BUCKET};
+      tail -f /dev/null"
     networks:
       - lakehouse_network
 
-  mariadb:
-    image: mariadb:latest
-    container_name: mariadb
-    ports:
-      - 3306:3306
+# Postgres DB for nessie backend
+  postgres:
+    image: postgres:14
+    container_name: postgres
     environment:
-      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-      MYSQL_USER: ${MARIADB_USER}
-      MYSQL_PASSWORD: ${MARIADB_PASSWORD}
-      MYSQL_DATABASE: ${MARIADB_DATABASE}
-    healthcheck:
-      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "${MARIADB_USER}", "-p${MARIADB_PASSWORD}"]
-      interval: 10s
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - mariadb-data:/var/lib/mysql
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: |
+        pg_isready -U ${DB_USERNAME} -d ${DB_NAME}
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - lakehouse_network
-
-  hive-metastore:
-    build: ./hive
-    container_name: hive-metastore
+    
+  # PG Admin
+  pgadmin:
+    image: dpage/pgadmin4:9.3
+    container_name: pgadmin
     ports:
-      - 9083:9083
-    environment:
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      - "5050:80"
     depends_on:
-      mariadb:
+      postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "9083"]
+      test: ["CMD", "nc", "-z", "localhost", "80"]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
-      start_period: 30s 
+      start_period: 45s
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: secret123
+    volumes:
+      - pgadata:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    networks:
+      - lakehouse_network
+
+  # Nessie Catalog with Postgres DB as backend
+  nessie:
+    image: ghcr.io/projectnessie/nessie:0.83.1
+    container_name: nessie
+    ports:
+      - "19120:19120"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - QUARKUS_PROFILE=prod
+      - QUARKUS_HTTP_PORT=19120
+      - NESSIE_VERSION_STORE_TYPE=JDBC
+      - QUARKUS_DATASOURCE_JDBC_URL=${DB_JDBC_URI}
+      - QUARKUS_DATASOURCE_USERNAME=${DB_USERNAME}
+      - QUARKUS_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - QUARKUS_LOG_LEVEL=INFO
     networks:
       - lakehouse_network
 
@@ -66,19 +107,46 @@ services:
     depends_on:
       minio:
         condition: service_healthy
-      hive-metastore:
+      nessie:
         condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          cpus: '8.0'
+          memory: 18G
+        limits:
+          cpus: '12.0'
+          memory: 24G
     environment:
       SPARK_MODE: master
       PYSPARK_PYTHON: python3
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     ports:
-      - "7077:7077"   # Spark master
-      - "8081:8080"   # UI
+      - "8082:8080"             # Master Web UI (exposed to 8082 instead of 8080)
+      - "7077:7077"             # Master Port for job submissions
+      - "18080:18080"           # Spark History Server
+      - "4040-4050:4040-4050"  # Driver UIs (one port per SparkContext)
+      - "8888:8888"             # Jupyter Notebook
     volumes:
       - ./airflow/data:/opt/airflow/data
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./spark/notebooks:/opt/bitnami/workspace/notebooks
+      - spark-logs:/tmp/spark-events
+    healthcheck:
+      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/8888'; then exit 0; else exit 1; fi"]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+    entrypoint: >
+      /bin/bash -c "
+      /opt/bitnami/spark/sbin/start-master.sh && \
+      mkdir -p /tmp/spark-events && \
+      /opt/bitnami/spark/sbin/start-history-server.sh && \
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' && \
+      tail -f /dev/null
+      "
     networks:
       - lakehouse_network
 
@@ -88,7 +156,16 @@ services:
       dockerfile: Dockerfile.spark-custom
     container_name: spark-worker
     depends_on:
-      - spark
+      spark:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          cpus: '8.0'
+          memory: 18G
+        limits:
+          cpus: '12.0'
+          memory: 24G
     environment:
       SPARK_MODE: worker
       PYSPARK_PYTHON: python3
@@ -101,14 +178,17 @@ services:
       - ./airflow/data:/opt/airflow/data
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./dqops_userhome/.data/check_results:/data/check_results
-    deploy:
-      resources:
-        reservations:
-          cpus: '1.0'
-          memory: 2G
-        limits:
-          cpus: '2.0'
-          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8081'"]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+    entrypoint: >
+      /bin/bash -c "
+      /opt/bitnami/spark/sbin/start-worker.sh spark://spark:7077 --cores 2 --memory 4g && \
+      tail -f /dev/null
+      "
     networks:
       - lakehouse_network
 
@@ -220,6 +300,8 @@ networks:
 
 volumes:
   minio-data:
-  mariadb-data:
+  pgdata:
+  pgadata:
+  spark-logs:
   superset_db_data:
   superset_data:
