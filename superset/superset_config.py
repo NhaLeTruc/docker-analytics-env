@@ -9,3 +9,5 @@ WTF_CSRF_EXEMPT_LIST = []
 WTF_CSRF_TIME_LIMIT = None
 
 WEBDRIVER_BASEURL = "http://localhost:8088/" 
+
+# TODO: Add master user authentication
