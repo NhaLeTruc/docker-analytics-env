@@ -10,9 +10,10 @@ Template for typical data engineer's local development works. Containerized loca
 4. Minio
 5. Apache Iceberg
 6. Apache Airflow
-7. Postgres
-8. Apache Superset
-9. Data Quality Ops
+7. Postgres - metadata only
+8. JupyterLab
+9. Apache Superset
+10. Data Quality Ops
 
 ## Getting Started
 
