@@ -1,4 +1,228 @@
-include:
-  - path: 'docker-compose.main.yaml'
-  - path: 'docker-compose.airflow.yaml'
+##################################################################################
+# Iceberg - MinIO - Nessie Catalog - Spark - JupyterLab - SuperSet - DqOps Setup
+##################################################################################
+
+version: '3'
+
+# include:
+#   - path: 'docker-compose.main.yaml'
+#   - path: 'docker-compose.airflow.yaml'
+services:
+
+  spark-master:
+    image: bitnami/spark:3.5.1
+    command: bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - 8080:8080
+      - 7077:7077
+    volumes:
+      - ./conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./app:/app # persistent storage
+    networks:
+      - lakehouse_network
+
+  spark-worker:
+    image: bitnami/spark:3.5.1
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 2g
+      SPARK_MASTER_URL: spark://spark-master:7077
+    volumes:
+      - ./conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./app:/app # persistent storage
+    networks:
+      - lakehouse_network
+
+  jupyter-local:
+    depends_on:
+      - spark-master
+    build: .
+    command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token=''
+    ports:
+      - 8888:8888
+    volumes:
+      - ./app:/app # persistent storage
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    networks:
+      - lakehouse_network
+
+  minio:
+    image: minio/minio:RELEASE.2025-05-24T17-08-30Z-cpuv1
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    volumes:
+      - minio-data:/data
+      - ./data_seeder:/seed
+      - ./minio:/user_data
+    entrypoint: >
+      /bin/sh -c "
+      minio server /data --console-address ':9001' &
+      sleep 5;
+      mc alias set myminio http://localhost:9000 ${MINIO_USER_USERNAME} ${MINIO_USER_PASSWORD};
+      mc admin accesskey create myminio/ --access-key ${AWS_ACCESS_KEY_ID} --secret-key ${AWS_SECRET_ACCESS_KEY} --description 'Access key for docker environment';
+      mc mb myminio/seed;
+      mc cp -r /seed/* myminio/seed/;
+      mc mb myminio/${NESSIE_BUCKET};
+      mc mb myminio/${UNITY_BUCKET};
+      tail -f /dev/null"
+    networks:
+      - lakehouse_network
+
+# Postgres DB for nessie backend
+  postgres:
+    image: postgres:14
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: |
+        pg_isready -U ${DB_USERNAME} -d ${DB_NAME}
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - lakehouse_network
+    
+  # PG Admin
+  pgadmin:
+    image: dpage/pgadmin4:9.3
+    container_name: pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "80"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: secret123
+    volumes:
+      - pgadata:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    networks:
+      - lakehouse_network
+
+  # Nessie Catalog with Postgres DB as backend
+  nessie:
+    image: ghcr.io/projectnessie/nessie:0.83.1
+    container_name: nessie
+    ports:
+      - "19120:19120"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - QUARKUS_PROFILE=prod
+      - QUARKUS_HTTP_PORT=19120
+      - NESSIE_VERSION_STORE_TYPE=JDBC
+      - QUARKUS_DATASOURCE_JDBC_URL=${DB_JDBC_URI}
+      - QUARKUS_DATASOURCE_USERNAME=${DB_USERNAME}
+      - QUARKUS_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - QUARKUS_LOG_LEVEL=INFO
+    networks:
+      - lakehouse_network
   
+  spark-thrift:
+    image: bitnami/spark:3.5.1
+    depends_on:
+      spark-master:
+        condition: service_started
+    container_name: spark-thrift
+    command: [
+      "/opt/bitnami/spark/sbin/start-thriftserver.sh",
+      "--conf", "spark.cores.max=2"
+    ]
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./airflow/data:/opt/airflow/data
+      - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./dqops_userhome/.data/check_results:/data/check_results
+    networks:
+      - lakehouse_network
+
+  db:
+    image: postgres:16
+    container_name: superset_db
+    restart: always
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - superset_db_data:/var/lib/postgresql/data
+    networks:
+      - lakehouse_network
+
+  superset:
+    image: apache/superset:latest
+    build:
+      context: ./superset
+    container_name: superset
+    env_file: .env
+    environment:
+      SQLALCHEMY_DATABASE_URI: >-
+        postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@superset_db:5432/${POSTGRES_DB}
+      SUPERSET_LOAD_EXAMPLES: "no"
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+    volumes:
+      - superset_data:/app/superset_home
+      - ./superset/superset_config.py:/app/superset_config.py
+    ports:
+      - "8088:8088"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lakehouse_network
+
+  dqops:
+    image: dqops/dqo
+    container_name: dqops
+    command: ${DQO_CMD}
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./dqops_userhome:/dqo/userhome
+    networks:
+      - lakehouse_network
+
+networks:
+  lakehouse_network:
+    driver: bridge
+
+volumes:
+  spark-logs:
+
