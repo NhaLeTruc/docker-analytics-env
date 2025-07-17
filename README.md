@@ -19,4 +19,14 @@ Template for typical data engineer's local development works. Containerized loca
 
 ```bash
 sudo docker compose up -d
+
+sudo watch docker ps -a
+
+sudo docker stop $(sudo docker ps -qa)
+
+sudo docker start $(sudo docker ps -qa)
+
+sudo docker compose down --volumes --remove-orphans
+
+sudo docker rmi -f $(sudo docker images --filter=reference='data_quality_in_*' -qa)
 ```
