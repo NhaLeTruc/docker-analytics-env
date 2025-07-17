@@ -1,0 +1,44 @@
+API: SYSTEM.storage
+Time: 14:45:11 UTC 07/17/2025
+Error: unable to rename (/data/.minio.sys/tmp -> /data/.minio.sys/tmp-old/6393de03-6190-4fa3-a9fd-5b1325455d91) file access denied, drive may be faulty, please investigate (*fmt.wrapError)
+       7: internal/logger/logger.go:271:logger.LogIf()
+       6: cmd/logging.go:156:cmd.storageLogIf()
+       5: cmd/prepare-storage.go:89:cmd.bgFormatErasureCleanupTmp()
+       4: cmd/xl-storage.go:272:cmd.newXLStorage()
+       3: cmd/object-api-common.go:63:cmd.newStorageAPI()
+       2: cmd/format-erasure.go:571:cmd.initStorageDisksWithErrors.func1()
+       1: github.com/minio/pkg/v3@v3.1.3/sync/errgroup/errgroup.go:123:errgroup.(*Group).Go.func1()
+
+API: SYSTEM.storage
+Time: 14:45:11 UTC 07/17/2025
+Error: unable to create (/data/.minio.sys/tmp) file access denied, drive may be faulty, please investigate (*fmt.wrapError)
+       7: internal/logger/logger.go:271:logger.LogIf()
+       6: cmd/logging.go:156:cmd.storageLogIf()
+       5: cmd/prepare-storage.go:96:cmd.bgFormatErasureCleanupTmp()
+       4: cmd/xl-storage.go:272:cmd.newXLStorage()
+       3: cmd/object-api-common.go:63:cmd.newStorageAPI()
+       2: cmd/format-erasure.go:571:cmd.initStorageDisksWithErrors.func1()
+       1: github.com/minio/pkg/v3@v3.1.3/sync/errgroup/errgroup.go:123:errgroup.(*Group).Go.func1()
+FATAL Unable to initialize backend: file access denied
+mc: <ERROR> Unable to initialize new alias from the provided credentials. Get "http://localhost:9000/probe-bsign-h4r2wyx3ks5knoweyfyg511t2wmfg1/?location=": dial tcp [::1]:9000: connect: connection refused.
+mc: <ERROR> Unable to initialize admin connection. No valid configuration found for 'myminio/' host alias.
+Bucket created successfully `myminio/dummy`.
+mc: <ERROR> Unable to prepare URL for copying. Unable to guess the type of copy operation.
+
+-----------------------------------------------------------------------------------------------
+
+datasource=postgresql
+quarkus.datasource.jdbc.url has not been defined
+java.lang.RuntimeException: Failed to start quarkus
+        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)
+        at io.quarkus.runtime.Application.start(Application.java:101)
+        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)
+        at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)
+        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)
+        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)
+        at io.quarkus.runner.GeneratedMain.main(Unknown Source)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:62)
+        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:33)
+Caused by: io.quarkus.runtime.configuration.ConfigurationException: quarkus.datasource.jdbc.url has not been defined
