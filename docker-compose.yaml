@@ -220,16 +220,16 @@ services:
   ## Superset and Data Quality OPs ##
   ###################################
   superset:
-    image: apache/superset:latest
     container_name: superset
     build:
       context: ./superset
+      dockerfile: Dockerfile
     env_file: .env
     environment:
       SQLALCHEMY_DATABASE_URI: >-
         postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-metadata:5432/${POSTGRES_DB}
-      SUPERSET_LOAD_EXAMPLES: "no"
-      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+      SUPERSET_LOAD_EXAMPLES: "yes"
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}      
     volumes:
       - superset_data:/app/superset_home
       - ./superset/superset_config.py:/app/superset_config.py
