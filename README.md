@@ -26,9 +26,13 @@ sudo docker stop $(sudo docker ps -qa)
 
 sudo docker start $(sudo docker ps -qa)
 
-sudo docker compose down --volumes --remove-orphans
-
 sudo docker rmi -f $(sudo docker images --filter=reference='data_quality_in_*' -qa)
 
 sudo docker images --format "{{.ID}}\t{{.Size}}\t{{.Repository}}:{{.Tag}}" | sort -k 2 -h
+
+sudo docker compose up --build --no-deps --force-recreate
+
+sudo docker compose down --volumes --remove-orphans
+
+sudo docker compose down -rmi all
 ```
