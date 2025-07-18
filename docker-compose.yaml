@@ -27,15 +27,18 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - minio-data:/data
+      - ./dummy:/data
     entrypoint: >
       /bin/sh -c "
       minio server /data --console-address ':9001' &
       sleep 5;
-      mc alias set myminio http://localhost:9000 ${MINIO_USER_USERNAME} ${MINIO_USER_PASSWORD};
+      mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
       mc admin accesskey create myminio/ --access-key ${MINIO_ACCESS_KEY} --secret-key ${MINIO_SECRET_KEY} --description 'Access key for docker environment';
       mc mb myminio/dummy;
-      mc cp -r /data_seeder/dummy/* myminio/dummy/;
+      mc mb myminio/datalake;
+      mc mb myminio/datalakehouse;
+      mc mb myminio/warehouse;
+      mc cp -r /dummy/* myminio/dummy/;
       tail -f /dev/null"
     networks:
       - lakehouse_network
@@ -164,9 +167,9 @@ services:
       - QUARKUS_PROFILE=prod
       - QUARKUS_HTTP_PORT=19120
       - NESSIE_VERSION_STORE_TYPE=JDBC
-      - QUARKUS_DATASOURCE_JDBC_URL=${DB_JDBC_URI}
-      - QUARKUS_DATASOURCE_USERNAME=${DB_USERNAME}
-      - QUARKUS_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgres-metadata:5432/${POSTGRES_DB}
+      - QUARKUS_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - QUARKUS_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - QUARKUS_LOG_CONSOLE_FORMAT=%d{yyyy-MM-dd HH:mm:ss} %-5p [%c{1.}] (%t) %s%e%n
       - QUARKUS_LOG_LEVEL=INFO
     networks:
@@ -177,7 +180,7 @@ services:
   #################################################
   postgres:
     image: postgres:16
-    container_name: postgres-metdada
+    container_name: postgres-metadata
     restart: always
     env_file: .env
     healthcheck:
@@ -187,8 +190,8 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - superset_db_data:/var/lib/postgresql/data/superset/
-      - nessie_db_data:/var/lib/postgresql/data/nessie/
+      - superset_db_data:/var/lib/postgresql/data/
+      - nessie_db_data:/var/lib/postgresql/data/
     networks:
       - lakehouse_network
 
@@ -224,7 +227,7 @@ services:
     env_file: .env
     environment:
       SQLALCHEMY_DATABASE_URI: >-
-        postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@superset_db:5432/${POSTGRES_DB}
+        postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-metadata:5432/${POSTGRES_DB}
       SUPERSET_LOAD_EXAMPLES: "no"
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
     volumes:
