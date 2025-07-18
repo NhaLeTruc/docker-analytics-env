@@ -3,9 +3,7 @@
 ######################################################################################
 
 version: '3'
-# include:
-#   - path: 'docker-compose.main.yaml'
-#   - path: 'docker-compose.airflow.yaml'
+
 services:
   ###########
   ## MinIO ##
@@ -27,10 +25,11 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - ./dummy:/data
+      - minio-data:/bitnami/minio/data
+      - ./dummy:/bitnami/minio/dummy      
     entrypoint: >
       /bin/sh -c "
-      minio server /data --console-address ':9001' &
+      minio server /bitnami/minio/data --console-address ':9001' &
       sleep 5;
       mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
       mc admin accesskey create myminio/ --access-key ${MINIO_ACCESS_KEY} --secret-key ${MINIO_SECRET_KEY} --description 'Access key for docker environment';

@@ -11,9 +11,10 @@ Template for typical data engineer's local development works. Containerized loca
 5. Apache Iceberg
 6. Apache Airflow
 7. Postgres - metadata only
-8. JupyterLab
-9. Apache Superset
-10. Data Quality Ops
+8. PgAdmin4
+9. JupyterLab
+10. Apache Superset
+11. Data Quality Ops
 
 ## Getting Started
 
@@ -22,6 +23,8 @@ sudo docker compose up -d
 
 sudo watch docker ps -a
 
+sudo watch docker images -a
+
 sudo docker stop $(sudo docker ps -qa)
 
 sudo docker start $(sudo docker ps -qa)
@@ -29,6 +32,8 @@ sudo docker start $(sudo docker ps -qa)
 sudo docker rmi -f $(sudo docker images --filter=reference='data_quality_in_*' -qa)
 
 sudo docker images --format "{{.ID}}\t{{.Size}}\t{{.Repository}}:{{.Tag}}" | sort -k 2 -h
+
+sudo docker exec -it 2695a7fa7142 sh
 
 sudo docker compose up --build --no-deps --force-recreate
 
