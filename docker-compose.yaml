@@ -1,9 +1,6 @@
 ######################################################################################
 ### Iceberg - MinIO - Nessie Catalog - Spark - JupyterLab - SuperSet - DqOps Setup ###
 ######################################################################################
-
-version: '3'
-
 services:
   ###########
   ## MinIO ##
@@ -12,9 +9,7 @@ services:
     image: bitnami/minio:2025.6.13-debian-12-r0
     container_name: minio-lake
     command: ["server", "/data", "--console-address", ":9001"]
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    env_file: .env
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Web console
@@ -27,18 +22,7 @@ services:
     volumes:
       - minio-data:/bitnami/minio/data
       - ./dummy:/bitnami/minio/dummy      
-    entrypoint: >
-      /bin/sh -c "
-      minio server /bitnami/minio/data --console-address ':9001' &
-      sleep 5;
-      mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      mc admin accesskey create myminio/ --access-key ${MINIO_ACCESS_KEY} --secret-key ${MINIO_SECRET_KEY} --description 'Access key for docker environment';
-      mc mb myminio/dummy;
-      mc mb myminio/datalake;
-      mc mb myminio/datalakehouse;
-      mc mb myminio/warehouse;
-      mc cp -r /dummy/* myminio/dummy/;
-      tail -f /dev/null"
+    entrypoint: ["/minio/minio-init.sh"]
     networks:
       - lakehouse_network
 
@@ -75,8 +59,8 @@ services:
       - spark-master
     environment:
       SPARK_MODE: worker
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 2g
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY}
       SPARK_MASTER_URL: spark://spark-master:7077
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
@@ -94,8 +78,8 @@ services:
       - spark-master
     environment:
       SPARK_MODE: worker
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 2g
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY}
       SPARK_MASTER_URL: spark://spark-master:7077
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
@@ -171,6 +155,12 @@ services:
       - QUARKUS_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - QUARKUS_LOG_CONSOLE_FORMAT=%d{yyyy-MM-dd HH:mm:ss} %-5p [%c{1.}] (%t) %s%e%n
       - QUARKUS_LOG_LEVEL=INFO
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:19120" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - lakehouse_network
 
@@ -223,11 +213,7 @@ services:
     build:
       context: ./superset
       dockerfile: Dockerfile
-    environment:
-      SQLALCHEMY_DATABASE_URI: >-
-        postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-metadata:5432/${POSTGRES_DB}
-      SUPERSET_LOAD_EXAMPLES: "yes"
-      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}      
+    env_file: .env    
     volumes:
       - superset_data:/app/superset_home
       - ./superset/superset_config.py:/app/superset_config.py
@@ -247,6 +233,12 @@ services:
       - "8889:8888"
     volumes:
       - ./dqops_userhome:/dqo/userhome
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8889" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - lakehouse_network
 
