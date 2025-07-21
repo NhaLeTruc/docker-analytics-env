@@ -75,8 +75,8 @@ services:
       - spark-master
     environment:
       SPARK_MODE: worker
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 2g
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY}
       SPARK_MASTER_URL: spark://spark-master:7077
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
@@ -94,8 +94,8 @@ services:
       - spark-master
     environment:
       SPARK_MODE: worker
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 2g
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY}
       SPARK_MASTER_URL: spark://spark-master:7077
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
@@ -112,13 +112,16 @@ services:
     build: 
       context: ./spark
       dockerfile: Dockerfile.jupyterlab
-    command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token=''
+    command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX'
     ports:
       - 8888:8888
     volumes:
-      - ./app:/app # persistent storage
+      - ./spark/notebooks:/notebooks # persistent storage
     environment:
-      - JUPYTER_ENABLE_LAB=yes
+      JUPYTER_ENABLE_LAB: yes
+      JUPYTER_CONFIG_DIR: /notebooks/config
+      JUPYTER_PATH: /notebooks/data
+      JUPYTER_RUNTIME_DIR: /notebooks/runtime
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
       interval: 10s

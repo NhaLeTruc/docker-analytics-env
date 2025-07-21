@@ -1,11 +1,15 @@
 FROM bitnami/spark:3.5.6-debian-12-r0 as jupyterlab
 
+USER root
+
 COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
 
-RUN python3 -m spylon_kernel install --user
+# RUN python3 -m spylon_kernel install --user
 
-WORKDIR /app
+USER 1001
+
+WORKDIR /notebooks
 
 EXPOSE 8888
