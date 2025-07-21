@@ -45,6 +45,7 @@ jupyterlab_pygments==0.3.0
 jupyterlab_server==2.27.1
 MarkupSafe==2.1.5
 matplotlib-inline==0.1.7
+minio
 mistune==3.0.2
 nbclient==0.10.0
 nbconvert==7.16.4
@@ -66,6 +67,7 @@ py4j==0.10.9.7
 pycparser==2.22
 Pygments==2.18.0
 pyspark==3.5.1
+psycopg2
 python-dateutil==2.9.0.post0
 python-json-logger==2.0.7
 PyYAML==6.0.1
