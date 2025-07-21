@@ -1,9 +1,6 @@
 ######################################################################################
 ### Iceberg - MinIO - Nessie Catalog - Spark - JupyterLab - SuperSet - DqOps Setup ###
 ######################################################################################
-
-version: '3'
-
 services:
   ###########
   ## MinIO ##
@@ -11,7 +8,6 @@ services:
   minio-lake:
     image: bitnami/minio:2025.6.13-debian-12-r0
     container_name: minio-lake
-    command: ["server", "/data", "--console-address", ":9001"]
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -122,6 +118,8 @@ services:
       JUPYTER_CONFIG_DIR: /notebooks/config
       JUPYTER_PATH: /notebooks/data
       JUPYTER_RUNTIME_DIR: /notebooks/runtime
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
       interval: 10s
@@ -159,13 +157,14 @@ services:
   nessie:
     image: ghcr.io/projectnessie/nessie:latest
     container_name: nessie-catalog
-    env_file: .env
     ports:
       - "19120:19120"
     depends_on:
       postgres:
         condition: service_healthy
     environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
       - QUARKUS_PROFILE=prod
       - QUARKUS_HTTP_PORT=19120
       - NESSIE_VERSION_STORE_TYPE=JDBC
@@ -223,14 +222,10 @@ services:
   ###################################
   superset:
     container_name: superset
+    env_file: .env
     build:
       context: ./superset
-      dockerfile: Dockerfile
-    environment:
-      SQLALCHEMY_DATABASE_URI: >-
-        postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-metadata:5432/${POSTGRES_DB}
-      SUPERSET_LOAD_EXAMPLES: "yes"
-      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}      
+      dockerfile: Dockerfile   
     volumes:
       - superset_data:/app/superset_home
       - ./superset/superset_config.py:/app/superset_config.py
