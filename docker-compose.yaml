@@ -42,11 +42,17 @@ services:
   ## Spark and JupyterLab ##
   ##########################
   spark-master:
-    image: bitnami/spark:3.5.6-debian-12-r0
+    # image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-master
-    command: bin/spark-class org.apache.spark.deploy.master.Master
+    # command: bin/spark-class org.apache.spark.deploy.master.Master
+    build: 
+      context: ./spark
+      dockerfile: Dockerfile
+    env_file:
+      - spark/.env
+      # - .env
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
+      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/8888'; then exit 0; else exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -54,12 +60,27 @@ services:
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      SPARK_MASTER_HOST: spark-master
+      SPARK_HISTORY_OPTS: -Dspark.history.fs.logDirectory=/tmp/spark-events
     ports:
-      - 8080:8080
-      - 7077:7077
+      - "8080:8080"             # Master Web UI
+      - "7077:7077"             # Master Port for job submissions
+      - "18080:18080"           # Spark History Server
+      - "4040-4050:4040-4050"  # Driver UIs (one port per SparkContext)
+      - "8888:8888"             # Jupyter Notebook
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./app:/app # persistent storage
+      - ./spark_apps:/opt/bitnami/spark/apps
+      - ./data:/opt/bitnami/spark/data
+      - spark-logs:/tmp/spark-events
+    entrypoint: >
+      /bin/bash -c "
+      /opt/bitnami/spark/sbin/start-master.sh && \
+      mkdir -p /tmp/spark-events && \
+      /opt/bitnami/spark/sbin/start-history-server.sh && \
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXX-XXXX-XXXX' && \
+      tail -f /dev/null
+      "
     networks:
       - lakehouse_network
 
@@ -67,8 +88,17 @@ services:
     image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-worker-1
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    env_file:
+      - spark/.env
     depends_on:
-      - spark-master
+      spark:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081" ]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
     environment:
       SPARK_MODE: worker
       SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
@@ -78,7 +108,7 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./app:/app # persistent storage
+      - ./spark_apps:/opt/bitnami/spark/apps
     networks:
       - lakehouse_network
 
@@ -86,8 +116,17 @@ services:
     image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-worker-2
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    env_file:
+      - spark/.env
     depends_on:
-      - spark-master
+      spark:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8081'"]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
     environment:
       SPARK_MODE: worker
       SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
@@ -97,44 +136,44 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./app:/app # persistent storage
+      - ./spark_apps:/opt/bitnami/spark/apps
     networks:
       - lakehouse_network
 
-  jupyterlab:
-    container_name: jupyterlab
-    depends_on:
-      - spark-master
-    build: 
-      context: ./spark
-      dockerfile: Dockerfile.jupyterlab
-    command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX'
-    ports:
-      - 8888:8888
-    volumes:
-      - ./spark/notebooks:/notebooks # persistent storage
-    environment:
-      JUPYTER_ENABLE_LAB: yes
-      JUPYTER_CONFIG_DIR: /notebooks/config
-      JUPYTER_PATH: /notebooks/data
-      JUPYTER_RUNTIME_DIR: /notebooks/runtime
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - lakehouse_network
+  # jupyterlab:
+  #   container_name: jupyterlab
+  #   depends_on:
+  #     - spark-master
+  #   build: 
+  #     context: ./spark
+  #     dockerfile: Dockerfile.jupyterlab
+  #   command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX'
+  #   ports:
+  #     - 8888:8888
+  #   volumes:
+  #     - ./spark/notebooks:/notebooks # persistent storage
+  #   environment:
+  #     JUPYTER_ENABLE_LAB: yes
+  #     JUPYTER_CONFIG_DIR: /notebooks/config
+  #     JUPYTER_PATH: /notebooks/data
+  #     JUPYTER_RUNTIME_DIR: /notebooks/runtime
+  #     MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  #     MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  #   healthcheck:
+  #     test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 10s
+  #   networks:
+  #     - lakehouse_network
   
   spark-thrift:
     image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-thrift
     depends_on:
-      spark-master:
-        condition: service_started
+      spark:
+        condition: service_healthy
     command: [
       "/opt/bitnami/spark/sbin/start-thriftserver.sh",
       "--conf", "spark.cores.max=2"
@@ -145,7 +184,6 @@ services:
     ports:
       - "10000:10000"
     volumes:
-      # - ./airflow/data:/opt/airflow/data
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./dqops_userhome/.data/check_results:/data/check_results
     networks:
