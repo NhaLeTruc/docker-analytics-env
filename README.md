@@ -32,7 +32,7 @@ sudo docker rmi -f $(sudo docker images --filter=reference='data_quality_in_*' -
 
 sudo docker images --format "{{.ID}}\t{{.Size}}\t{{.Repository}}:{{.Tag}}" | sort -k 2 -h
 
-sudo docker exec -it <CONTAINER_ID> sh
+sudo docker exec -it <CONTAINER_ID> bash
 
 sudo docker inspect <CONTAINER_ID> | grep "IPAddress"
 

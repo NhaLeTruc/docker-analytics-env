@@ -21,11 +21,11 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - minio-data:/bitnami/minio/data
-      - ./dummy:/bitnami/minio/dummy      
+      - minio-data:/opt/bitnami/minio/data
+      - ./dummy:/opt/bitnami/minio/dummy      
     entrypoint: >
       /bin/sh -c "
-      minio server /bitnami/minio/data --console-address ':9001' &
+      minio server /opt/bitnami/minio/data --console-address ':9001' &
       sleep 5;
       mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
       mc admin accesskey create myminio/ --access-key ${MINIO_ACCESS_KEY} --secret-key ${MINIO_SECRET_KEY} --description 'Access key for docker environment';
@@ -33,7 +33,7 @@ services:
       mc mb myminio/datalake;
       mc mb myminio/datalakehouse;
       mc mb myminio/warehouse;
-      mc cp -r /dummy/* myminio/dummy/;
+      mc cp -r /opt/bitnami/minio/dummy/* myminio/dummy/;
       tail -f /dev/null"
     networks:
       - lakehouse_network
@@ -180,7 +180,8 @@ services:
         condition: service_healthy
     command: [
       "/opt/bitnami/spark/sbin/start-thriftserver.sh",
-      "--conf", "spark.cores.max=2"
+      "--conf", "spark.cores.max=2",
+      "--conf", "spark.master=spark://spark-master:7077"
     ]
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
@@ -194,7 +195,7 @@ services:
     ports:
       - "10000:10000"
     volumes:
-      - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      # - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./dqops_userhome/.data/check_results:/data/check_results
     networks:
       - lakehouse_network
@@ -304,6 +305,12 @@ services:
       - "8889:8888"
     volumes:
       - ./dqops_userhome:/dqo/userhome
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
     networks:
       - lakehouse_network
 
