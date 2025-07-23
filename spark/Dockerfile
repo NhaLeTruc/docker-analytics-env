@@ -8,9 +8,11 @@ RUN pip install -r requirements.txt
 RUN adduser defaultuser
 RUN usermod -u 1000 --gid 0 defaultuser
 
-USER defaultuser
+RUN chown -R defaultuser:defaultuser /opt/bitnami
+RUN chmod -R 775 /opt/bitnami
 
-WORKDIR /notebooks
+USER defaultuser
+WORKDIR /opt/bitnami/notebooks
 
 EXPOSE 8888
 EXPOSE 8080

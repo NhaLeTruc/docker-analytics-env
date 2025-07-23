@@ -1,7 +1,16 @@
 # Docker Compose wrapper
 DC = docker compose
 
+up:
+	sudo docker compose up -d
 
+down:
+	sudo docker compose down --volumes --remove-orphans
+
+deep_clean:
+	sudo docker compose down --volumes --remove-orphans \
+	sudo docker system prune --volumes \
+	sudo docker builder prune -fa
 
 spark_submit:
-	docker exec spark-master spark-submit --master spark://spark-master:7077 --deploy-mode client ./opt/bitnami/spark/apps$(app)
+	sudo docker exec spark-master spark-submit --master spark://spark-master:7077 --deploy-mode client ./opt/bitnami/spark/apps$(app)

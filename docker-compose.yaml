@@ -25,7 +25,7 @@ services:
       - ./dummy:/opt/bitnami/minio/dummy      
     entrypoint: >
       /bin/sh -c "
-      minio server /opt/bitnami/minio/data --console-address ':9001' &
+      minio server /bitnami/minio/data --console-address ':9001' &
       sleep 5;
       mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
       mc admin accesskey create myminio/ --access-key ${MINIO_ACCESS_KEY} --secret-key ${MINIO_SECRET_KEY} --description 'Access key for docker environment';
@@ -63,9 +63,9 @@ services:
       SPARK_MASTER_HOST: spark-master
       SPARK_HISTORY_OPTS: -Dspark.history.fs.logDirectory=/tmp/spark-events
       JUPYTER_ENABLE_LAB: yes
-      JUPYTER_CONFIG_DIR: /notebooks/config
-      JUPYTER_PATH: /notebooks/data
-      JUPYTER_RUNTIME_DIR: /notebooks/runtime
+      JUPYTER_CONFIG_DIR: /opt/bitnami/notebooks/config
+      JUPYTER_PATH: /opt/bitnami/notebooks/data
+      JUPYTER_RUNTIME_DIR: /opt/bitnami/notebooks/runtime
     ports:
       - "8080:8080"             # Master Web UI
       - "7077:7077"             # Master Port for job submissions
@@ -75,8 +75,7 @@ services:
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./spark_apps:/opt/bitnami/spark/apps
-      - ./spark/notebooks:/notebooks
-      # - ./data:/opt/bitnami/spark/data
+      - ./spark/notebooks:/opt/bitnami/notebooks
       - spark-logs:/tmp/spark-events
     entrypoint: >
       /bin/bash -c "
