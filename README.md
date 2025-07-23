@@ -41,4 +41,6 @@ sudo docker compose up --build --no-deps --force-recreate
 sudo docker compose down --volumes --remove-orphans
 
 sudo docker compose down -rmi all
+
+jupyter kernelspec list
 ```
