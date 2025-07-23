@@ -8,8 +8,8 @@ RUN pip install -r requirements.txt
 
 # RUN python3 -m spylon_kernel install --user
 
-RUN adduser defaultuser \
-    usermod -u 1000 --gid 0 defaultuser
+RUN adduser defaultuser
+RUN usermod -u 1000 --gid 0 defaultuser
 
 USER defaultuser
 

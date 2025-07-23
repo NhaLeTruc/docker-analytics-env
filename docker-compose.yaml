@@ -50,7 +50,7 @@ services:
       dockerfile: Dockerfile
     env_file:
       - spark/.env
-      # - .env
+      - .env
     healthcheck:
       test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/8888'; then exit 0; else exit 1; fi"]
       interval: 10s
@@ -62,6 +62,10 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       SPARK_MASTER_HOST: spark-master
       SPARK_HISTORY_OPTS: -Dspark.history.fs.logDirectory=/tmp/spark-events
+      JUPYTER_ENABLE_LAB: yes
+      JUPYTER_CONFIG_DIR: /notebooks/config
+      JUPYTER_PATH: /notebooks/data
+      JUPYTER_RUNTIME_DIR: /notebooks/runtime
     ports:
       - "8080:8080"             # Master Web UI
       - "7077:7077"             # Master Port for job submissions
@@ -71,14 +75,14 @@ services:
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./spark_apps:/opt/bitnami/spark/apps
-      - ./data:/opt/bitnami/spark/data
+      - ./spark/notebooks:/notebooks
+      # - ./data:/opt/bitnami/spark/data
       - spark-logs:/tmp/spark-events
     entrypoint: >
       /bin/bash -c "
-      /opt/bitnami/spark/sbin/start-master.sh && \
-      mkdir -p /tmp/spark-events && \
-      /opt/bitnami/spark/sbin/start-history-server.sh && \
-      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXX-XXXX-XXXX' && \
+      /opt/bitnami/spark/sbin/start-master.sh & \
+      /opt/bitnami/spark/sbin/start-history-server.sh & \
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXX-XXXX-XXXX' & \
       tail -f /dev/null
       "
     networks:
@@ -91,7 +95,7 @@ services:
     env_file:
       - spark/.env
     depends_on:
-      spark:
+      spark-master:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8081" ]
@@ -119,7 +123,7 @@ services:
     env_file:
       - spark/.env
     depends_on:
-      spark:
+      spark-master:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8081'"]
@@ -172,7 +176,7 @@ services:
     image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-thrift
     depends_on:
-      spark:
+      spark-master:
         condition: service_healthy
     command: [
       "/opt/bitnami/spark/sbin/start-thriftserver.sh",
@@ -217,8 +221,7 @@ services:
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
       - QUARKUS_PROFILE=dev
       - QUARKUS_HTTP_PORT=19120
-      - NESSIE_VERSION_STORE_TYPE=JDBC2
-      - NESSIE_VERSION_STORE_PERSIST_JDBC_DATASOURCE=postgresql
+      - NESSIE_VERSION_STORE_TYPE=JDBC
       - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       - QUARKUS_DATASOURCE_USERNAME=${POSTGRES_USER}
       - QUARKUS_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
@@ -301,12 +304,6 @@ services:
       - "8889:8888"
     volumes:
       - ./dqops_userhome:/dqo/userhome
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8889'"]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
     networks:
       - lakehouse_network
 
