@@ -82,7 +82,6 @@ services:
       /bin/bash -c "
       /opt/bitnami/spark/sbin/start-master.sh & \
       /opt/bitnami/spark/sbin/start-history-server.sh & \
-      # jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXX-XXXX-XXXX' & \
       tail -f /dev/null
       "
     networks:
@@ -145,8 +144,11 @@ services:
       - lakehouse_network
 
   zeppelin:
-    image: apache/zeppelin:latest
+    # image: apache/zeppelin:0.12.0
     container_name: zeppelin
+    build: 
+      context: ./spark
+      dockerfile: Dockerfile.zeppelin
     depends_on:
       spark-master:
         condition: service_healthy
@@ -158,6 +160,7 @@ services:
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_END_POINT: minio-lake:9000
       SPARK_MASTER: spark://spark-master:7077
       SPARK_HOME: /opt/zeppelin/spark
       PYSPARK_PYTHON: python3.12
@@ -165,7 +168,7 @@ services:
       ZEPPELIN_LOG_DIR: /opt/zeppelin/logs
       ZEPPELIN_NOTEBOOK_DIR: /opt/zeppelin/notebook
     healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
       interval: 15s
       timeout: 15s
       retries: 5
