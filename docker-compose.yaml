@@ -155,7 +155,7 @@ services:
     ports:
       - "8888:8080"
     volumes:
-      - ./spark/notebooks:/opt/zeppelin/notebook
+      - ./spark/notebooks:/opt/zeppelin/notebooks
       - zeppelin-logs:/opt/zeppelin/logs
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
@@ -163,10 +163,10 @@ services:
       MINIO_END_POINT: minio-lake:9000
       SPARK_MASTER: spark://spark-master:7077
       SPARK_HOME: /opt/zeppelin/spark
-      PYSPARK_PYTHON: python3.12
+      PYSPARK_PYTHON: python3.9
       PYSPARK_DRIVER_PYTHON: python3
       ZEPPELIN_LOG_DIR: /opt/zeppelin/logs
-      ZEPPELIN_NOTEBOOK_DIR: /opt/zeppelin/notebook
+      ZEPPELIN_NOTEBOOK_DIR: /opt/zeppelin/notebooks
     healthcheck:
       test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
       interval: 15s
@@ -233,37 +233,6 @@ services:
     networks:
       - lakehouse_network
 
-  ####################
-  ## Nessie Catalog ##
-  ####################
-  nessie:
-    image: ghcr.io/projectnessie/nessie:latest
-    container_name: nessie-catalog
-    ports:
-      - "19120:19120"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/19120'"]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
-    environment:
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-      - QUARKUS_PROFILE=dev
-      - QUARKUS_HTTP_PORT=19120
-      - NESSIE_VERSION_STORE_TYPE=JDBC
-      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      - QUARKUS_DATASOURCE_USERNAME=${POSTGRES_USER}
-      - QUARKUS_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
-      - QUARKUS_LOG_CONSOLE_FORMAT=%d{yyyy-MM-dd HH:mm:ss} %-5p [%c{1.}] (%t) %s%e%n
-      - QUARKUS_LOG_LEVEL=INFO
-    networks:
-      - lakehouse_network
-
   #################################################
   ## Postgres DB for superset and nessie backend ##
   #################################################
@@ -304,6 +273,37 @@ services:
     networks:
       - lakehouse_network
 
+  ####################
+  ## Nessie Catalog ##
+  ####################
+  nessie:
+    image: ghcr.io/projectnessie/nessie:latest
+    container_name: nessie-catalog
+    ports:
+      - "19120:19120"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/19120'"]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - QUARKUS_PROFILE=dev
+      - QUARKUS_HTTP_PORT=19120
+      - NESSIE_VERSION_STORE_TYPE=JDBC
+      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      - QUARKUS_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - QUARKUS_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - QUARKUS_LOG_CONSOLE_FORMAT=%d{yyyy-MM-dd HH:mm:ss} %-5p [%c{1.}] (%t) %s%e%n
+      - QUARKUS_LOG_LEVEL=INFO
+    networks:
+      - lakehouse_network
+      
   ###################################
   ## Superset and Data Quality OPs ##
   ###################################

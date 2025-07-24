@@ -5,10 +5,23 @@ USER root
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
+RUN apt update
+RUN apt install default-jdk scala=2.12.20 git -y
+
+RUN wget https://archive.apache.org/dist/spark/spark-3.5.6/spark-3.5.6-bin-hadoop3.tgz --progress=bar:force \
+    && tar xvf spark-*.tgz && \
+    && mkdir -p /opt/zeppelin/spark && \
+    && mv spark-3.5.6-bin-hadoop3 /opt/zeppelin/spark/. &&
+
+ENV SPARK_HOME "/opt/zeppelin/spark/"
+
 RUN adduser defaultuser
 RUN usermod -u 1001 --gid 0 defaultuser
 
+RUN chown -R defaultuser:defaultuser /opt/zeppelin
+RUN chmod -R 775 /opt/zeppelin
+
 USER defaultuser
-WORKDIR /opt/zeppelin/notebooks
+WORKDIR /opt/zeppelin/
 
 EXPOSE 8888

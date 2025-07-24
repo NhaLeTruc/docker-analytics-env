@@ -43,4 +43,6 @@ sudo docker compose down --volumes --remove-orphans
 sudo docker compose down -rmi all
 
 jupyter kernelspec list
+
+cat /etc/os-release
 ```
