@@ -6,12 +6,12 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 RUN apt update
-RUN apt install default-jdk scala=2.12.20 git -y
+RUN apt install default-jdk git -y
 
-RUN wget https://archive.apache.org/dist/spark/spark-3.5.6/spark-3.5.6-bin-hadoop3.tgz --progress=bar:force \
-    && tar xvf spark-*.tgz && \
-    && mkdir -p /opt/zeppelin/spark && \
-    && mv spark-3.5.6-bin-hadoop3 /opt/zeppelin/spark/. &&
+RUN wget https://archive.apache.org/dist/spark/spark-3.5.6/spark-3.5.6-bin-hadoop3-scala2.13.tgz \
+    && tar xvf spark-*.tgz \
+    && mkdir -p /opt/zeppelin/spark \
+    && mv spark-3.5.6-bin-hadoop3-scala2.13/* /opt/zeppelin/spark
 
 ENV SPARK_HOME "/opt/zeppelin/spark/"
 
