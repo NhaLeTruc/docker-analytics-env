@@ -38,9 +38,9 @@ services:
     networks:
       - lakehouse_network
 
-  ##########################
-  ## Spark and JupyterLab ##
-  ##########################
+  ########################
+  ## Spark and Notebook ##
+  ########################
   spark-master:
     # image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-master
@@ -60,28 +60,29 @@ services:
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_END_POINT: minio-lake:9000
       SPARK_MASTER_HOST: spark-master
       SPARK_HISTORY_OPTS: -Dspark.history.fs.logDirectory=/tmp/spark-events
-      JUPYTER_ENABLE_LAB: yes
-      JUPYTER_CONFIG_DIR: /opt/bitnami/notebooks/config
-      JUPYTER_PATH: /opt/bitnami/notebooks/data
-      JUPYTER_RUNTIME_DIR: /opt/bitnami/notebooks/runtime
+      # JUPYTER_ENABLE_LAB: yes
+      # JUPYTER_CONFIG_DIR: /opt/bitnami/notebooks/config
+      # JUPYTER_PATH: /opt/bitnami/notebooks/data
+      # JUPYTER_RUNTIME_DIR: /opt/bitnami/notebooks/runtime
     ports:
       - "8080:8080"             # Master Web UI
       - "7077:7077"             # Master Port for job submissions
       - "18080:18080"           # Spark History Server
       - "4040-4050:4040-4050"   # Driver UIs (one port per SparkContext)
-      - "8888:8888"             # JupyterLab
+      # - "8888:8888"             # JupyterLab
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./spark_apps:/opt/bitnami/spark/apps
-      - ./spark/notebooks:/opt/bitnami/notebooks
+      # - ./spark/notebooks:/opt/bitnami/notebooks
       - spark-logs:/tmp/spark-events
     entrypoint: >
       /bin/bash -c "
       /opt/bitnami/spark/sbin/start-master.sh & \
       /opt/bitnami/spark/sbin/start-history-server.sh & \
-      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXX-XXXX-XXXX' & \
+      # jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXX-XXXX-XXXX' & \
       tail -f /dev/null
       "
     networks:
@@ -143,10 +144,40 @@ services:
     networks:
       - lakehouse_network
 
+  zeppelin:
+    image: apache/zeppelin:latest
+    container_name: zeppelin
+    depends_on:
+      spark-master:
+        condition: service_healthy
+    ports:
+      - "8888:8080"
+    volumes:
+      - ./spark/notebooks:/opt/zeppelin/notebook
+      - zeppelin-logs:/opt/zeppelin/logs
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      SPARK_MASTER: spark://spark-master:7077
+      SPARK_HOME: /opt/zeppelin/spark
+      PYSPARK_PYTHON: python3.12
+      PYSPARK_DRIVER_PYTHON: python3
+      ZEPPELIN_LOG_DIR: /opt/zeppelin/logs
+      ZEPPELIN_NOTEBOOK_DIR: /opt/zeppelin/notebook
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+    networks:
+      - lakehouse_network
+
   # jupyterlab:
   #   container_name: jupyterlab
   #   depends_on:
-  #     - spark-master
+  #     spark-master:
+  #       condition: service_healthy
   #   build: 
   #     context: ./spark
   #     dockerfile: Dockerfile.jupyterlab
@@ -320,6 +351,7 @@ networks:
 volumes:
   minio-data:
   spark-logs:
+  zeppelin-logs:
   pgadata:
   superset_data:
   meta_data:
