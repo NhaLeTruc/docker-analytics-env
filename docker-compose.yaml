@@ -52,7 +52,7 @@ services:
       - spark/.env
       - .env
     healthcheck:
-      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080'; then exit 0; else exit 1; fi"]
+      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/8888'; then exit 0; else exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -82,6 +82,7 @@ services:
       /bin/bash -c "
       /opt/bitnami/spark/sbin/start-master.sh & \
       /opt/bitnami/spark/sbin/start-history-server.sh & \
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXXX-XXXXX-XXXXX' & \
       tail -f /dev/null
       "
     networks:

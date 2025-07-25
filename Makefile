@@ -9,7 +9,6 @@ down:
 
 deep_clean:
 	sudo docker compose down --volumes --remove-orphans \
-	sudo docker system prune --volumes \
 	sudo docker builder prune -fa
 
 spark_submit:
