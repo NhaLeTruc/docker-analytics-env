@@ -2,8 +2,14 @@ FROM bitnami/spark:3.5.6-debian-12-r0
 
 USER root
 
-# COPY requirements.txt requirements.txt
-# RUN pip install -r requirements.txt
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+RUN jupyter server extension enable --py sparkmagic
+
+RUN cd $(pip show sparkmagic)
+RUN jupyter-kernelspec install sparkmagic/kernels/sparkkernel \
+    jupyter-kernelspec install sparkmagic/kernels/pysparkkernel \
+    jupyter-kernelspec install sparkmagic/kernels/sparkrkernel
 
 RUN adduser defaultuser
 RUN usermod -u 1000 --gid 0 defaultuser

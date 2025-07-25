@@ -63,20 +63,20 @@ services:
       MINIO_END_POINT: minio-lake:9000
       SPARK_MASTER_HOST: spark-master
       SPARK_HISTORY_OPTS: -Dspark.history.fs.logDirectory=/tmp/spark-events
-      # JUPYTER_ENABLE_LAB: yes
-      # JUPYTER_CONFIG_DIR: /opt/bitnami/notebooks/config
-      # JUPYTER_PATH: /opt/bitnami/notebooks/data
-      # JUPYTER_RUNTIME_DIR: /opt/bitnami/notebooks/runtime
+      JUPYTER_ENABLE_LAB: yes
+      JUPYTER_CONFIG_DIR: /opt/bitnami/notebooks/config
+      JUPYTER_PATH: /opt/bitnami/notebooks/data
+      JUPYTER_RUNTIME_DIR: /opt/bitnami/notebooks/runtime
     ports:
       - "8080:8080"             # Master Web UI
       - "7077:7077"             # Master Port for job submissions
       - "18080:18080"           # Spark History Server
       - "4040-4050:4040-4050"   # Driver UIs (one port per SparkContext)
-      # - "8888:8888"             # JupyterLab
+      - "8888:8888"             # JupyterLab
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./spark_apps:/opt/bitnami/spark/apps
-      # - ./spark/notebooks:/opt/bitnami/notebooks
+      - ./spark/notebooks:/opt/bitnami/notebooks
       - spark-logs:/tmp/spark-events
     entrypoint: >
       /bin/bash -c "
@@ -142,97 +142,7 @@ services:
       - ./spark_apps:/opt/bitnami/spark/apps
     networks:
       - lakehouse_network
-
-  zeppelin:
-    # image: apache/zeppelin:0.12.0
-    container_name: zeppelin
-    build: 
-      context: ./spark
-      dockerfile: Dockerfile.zeppelin
-    depends_on:
-      spark-master:
-        condition: service_healthy
-    ports:
-      - "8888:8080"
-    volumes:
-      - ./spark/notebooks:/opt/zeppelin/notebooks
-      - zeppelin-logs:/opt/zeppelin/logs
-    environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_END_POINT: minio-lake:9000
-      SPARK_MASTER: spark://spark-master:7077
-      SPARK_HOME: /opt/zeppelin/spark
-      PYSPARK_PYTHON: python3.9
-      PYSPARK_DRIVER_PYTHON: python3
-      ZEPPELIN_LOG_DIR: /opt/zeppelin/logs
-      ZEPPELIN_NOTEBOOK_DIR: /opt/zeppelin/notebooks
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
-    networks:
-      - lakehouse_network
-
-  # jupyterlab:
-  #   container_name: jupyterlab
-  #   depends_on:
-  #     spark-master:
-  #       condition: service_healthy
-  #   build: 
-  #     context: ./spark
-  #     dockerfile: Dockerfile.jupyterlab
-  #   command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX'
-  #   ports:
-  #     - 8888:8888
-  #   volumes:
-  #     - ./spark/notebooks:/notebooks # persistent storage
-  #   environment:
-  #     JUPYTER_ENABLE_LAB: yes
-  #     JUPYTER_CONFIG_DIR: /notebooks/config
-  #     JUPYTER_PATH: /notebooks/data
-  #     JUPYTER_RUNTIME_DIR: /notebooks/runtime
-  #     MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-  #     MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-  #   healthcheck:
-  #     test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 10s
-  #   networks:
-  #     - lakehouse_network
-  
-  spark-thrift:
-    image: bitnami/spark:3.5.6-debian-12-r0
-    container_name: spark-thrift
-    depends_on:
-      spark-master:
-        condition: service_healthy
-    command: [
-      "/opt/bitnami/spark/sbin/start-thriftserver.sh",
-      "--conf", "spark.cores.max=2",
-      "--conf", "spark.master=spark://spark-master:7077"
-    ]
-    environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/10000'"]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
-    ports:
-      - "10000:10000"
-    volumes:
-      # - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./dqops_userhome/.data/check_results:/data/check_results
-    networks:
-      - lakehouse_network
-
+ 
   #################################################
   ## Postgres DB for superset and nessie backend ##
   #################################################
@@ -330,22 +240,113 @@ services:
     networks:
       - lakehouse_network
 
-  dqops:
-    image: dqops/dqo
-    container_name: data-quality-ops
-    command: ${DQO_CMD}
-    ports:
-      - "8889:8888"
-    volumes:
-      - ./dqops_userhome:/dqo/userhome
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
-    networks:
-      - lakehouse_network
+  # spark-thrift:
+  #   image: bitnami/spark:3.5.6-debian-12-r0
+  #   container_name: spark-thrift
+  #   depends_on:
+  #     spark-master:
+  #       condition: service_healthy
+  #   command: [
+  #     "/opt/bitnami/spark/sbin/start-thriftserver.sh",
+  #     "--conf", "spark.cores.max=2",
+  #     "--conf", "spark.master=spark://spark-master:7077"
+  #   ]
+  #   environment:
+  #     MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  #     MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/10000'"]
+  #     interval: 15s
+  #     timeout: 15s
+  #     retries: 5
+  #     start_period: 30s
+  #   ports:
+  #     - "10000:10000"
+  #   volumes:
+  #     # - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+  #     - ./dqops_userhome/.data/check_results:/data/check_results
+  #   networks:
+  #     - lakehouse_network
+
+  # Free 14 days trial key ended  
+  # dqops:
+  #   image: dqops/dqo
+  #   container_name: data-quality-ops
+  #   command: ${DQO_CMD}
+  #   ports:
+  #     - "8889:8888"
+  #   volumes:
+  #     - ./dqops_userhome:/dqo/userhome
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
+  #     interval: 15s
+  #     timeout: 15s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     - lakehouse_network
+
+    # zeppelin:
+  #   # image: apache/zeppelin:0.12.0
+  #   container_name: zeppelin
+  #   build: 
+  #     context: ./spark
+  #     dockerfile: Dockerfile.zeppelin
+  #   depends_on:
+  #     spark-master:
+  #       condition: service_healthy
+  #   ports:
+  #     - "8888:8080"
+  #   volumes:
+  #     - ./spark/notebooks:/opt/zeppelin/notebooks
+  #     - zeppelin-logs:/opt/zeppelin/logs
+  #   environment:
+  #     MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  #     MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  #     MINIO_END_POINT: minio-lake:9000
+  #     SPARK_MASTER: spark://spark-master:7077
+  #     SPARK_HOME: /opt/zeppelin/spark
+  #     PYSPARK_PYTHON: python3.9
+  #     PYSPARK_DRIVER_PYTHON: python3
+  #     ZEPPELIN_LOG_DIR: /opt/zeppelin/logs
+  #     ZEPPELIN_NOTEBOOK_DIR: /opt/zeppelin/notebooks
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
+  #     interval: 15s
+  #     timeout: 15s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     - lakehouse_network
+
+  # jupyterlab:
+  #   container_name: jupyterlab
+  #   depends_on:
+  #     spark-master:
+  #       condition: service_healthy
+  #   build: 
+  #     context: ./spark
+  #     dockerfile: Dockerfile.jupyterlab
+  #   command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX'
+  #   ports:
+  #     - 8888:8888
+  #   volumes:
+  #     - ./spark/notebooks:/notebooks # persistent storage
+  #   environment:
+  #     JUPYTER_ENABLE_LAB: yes
+  #     JUPYTER_CONFIG_DIR: /notebooks/config
+  #     JUPYTER_PATH: /notebooks/data
+  #     JUPYTER_RUNTIME_DIR: /notebooks/runtime
+  #     MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  #     MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  #   healthcheck:
+  #     test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 10s
+  #   networks:
+  #     - lakehouse_network
 
 networks:
   lakehouse_network:
