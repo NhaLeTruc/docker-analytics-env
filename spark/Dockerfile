@@ -2,14 +2,6 @@ FROM bitnami/spark:3.5.6-debian-12-r0
 
 USER root
 
-# ----------
-# Setup Python and Livy/Spark Deps
-#
-# Install GCP keys to avoid error:
-# "GPG error: https://packages.cloud.google.com/apt cloud-sdk InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY B53DC80D13EDEF05"
-RUN apt-get install apt-transport-https ca-certificates gnupg
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 # Livy Requires:
 # - mvn (from maven package or maven3 tarball)
 # - openjdk-8-jdk (or Oracle JDK 8)
@@ -22,10 +14,6 @@ RUN apt update && apt install -yq --no-install-recommends --force-yes \
     r-base \
     r-base-core && \
     rm -rf /var/lib/apt/lists/*
-
-ENV PYTHONHASHSEED 0
-ENV PYTHONIOENCODING UTF-8
-ENV PIP_DISABLE_PIP_VERSION_CHECK 1
 
 # ----------
 # Build Livy

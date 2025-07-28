@@ -68,6 +68,7 @@ services:
       - "7077:7077"             # Master Port for job submissions
       - "18080:18080"           # Spark History Server
       - "4040-4050:4040-4050"   # Driver UIs (one port per SparkContext)
+      - "8998:8998"             # Livy REST
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./spark_apps:/opt/bitnami/spark/apps
@@ -160,7 +161,7 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_END_POINT: minio-lake:9000
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8088'"]
       interval: 10s
       timeout: 5s
       retries: 5
