@@ -22,7 +22,7 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 RUN mkdir /home/defaultuser/.sparkmagic
-COPY sparkmagic/example_config.json /home/defaultuser/.sparkmagic/config.json
+COPY sparkmagic/deafult_config.json /home/defaultuser/.sparkmagic/config.json
 RUN sed -i 's/localhost/spark/g' /home/defaultuser/.sparkmagic/config.json
 RUN pip install ipywidgets
 RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkkernel
@@ -37,5 +37,5 @@ RUN chmod -R 775 /home/defaultuser
 USER defaultuser
 WORKDIR /home/defaultuser
 
-CMD ["start-notebook.sh", "--NotebookApp.iopub_data_rate_limit=1000000000"]
+# CMD ["start-notebook.sh", "--NotebookApp.iopub_data_rate_limit=1000000000"]
 EXPOSE 8888
