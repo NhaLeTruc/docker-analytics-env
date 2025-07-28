@@ -44,7 +44,7 @@ RUN curl --progress-bar -L --retry 3 \
   && mkdir "${LIVY_HOME}/logs" \
   && chown -R root:root "${LIVY_HOME}"
 
-EXPOSE 8998
+
 
 HEALTHCHECK CMD curl -f "http://host.docker.internal:${LIVY_PORT}/" || exit 1
 
@@ -57,9 +57,9 @@ RUN chown -R defaultuser:defaultuser /opt/bitnami
 RUN chmod -R 775 /opt/bitnami
 
 USER defaultuser
-WORKDIR /opt/bitnami/notebooks
+WORKDIR /opt/bitnami/
 
-EXPOSE 8888
+EXPOSE 8998
 EXPOSE 8080
 EXPOSE 8081
 EXPOSE 7077
