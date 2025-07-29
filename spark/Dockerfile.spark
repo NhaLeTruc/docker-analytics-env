@@ -1,0 +1,17 @@
+FROM bitnami/spark:3.5.6-debian-12-r0
+
+USER root
+
+RUN adduser defaultuser
+RUN usermod -u 1000 --gid 0 defaultuser
+
+RUN chown -R defaultuser:defaultuser /opt/bitnami
+RUN chmod -R 775 /opt/bitnami
+
+USER defaultuser
+WORKDIR /opt/bitnami
+
+EXPOSE 8080
+EXPOSE 8081
+EXPOSE 7077
+EXPOSE 18080

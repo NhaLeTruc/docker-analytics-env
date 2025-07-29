@@ -140,19 +140,19 @@ services:
       - lakehouse_network
  
   zeppelin:
-    image: apache/zeppelin:0.12.0
+    # image: apache/zeppelin:0.12.0
+    build:
+      context: ./zeppelin
+      dockerfile: Dockerfile.zeppelin
     container_name: zeppelin
     ports:
-      - "8888:8080"
+      - "8888:8888"
     volumes:
       - ./spark_apps:/zeppelin/spark
-      - ./notebooks:/opt/zeppelin/notebook
-      - ./zeppelin/interpreter.json:/zeppelin/conf/interpreter.json
+      - ./notebooks:/opt/bitnami/zeppelin/notebook
+      - ./zeppelin/interpreter.json:/opt/bitnami/zeppelin/conf/interpreter.json
     environment:
       - SPARK_MASTER=spark://spark-master:7077
-      - SPARK_HOME=/zeppelin/spark
-      - ZEPPELIN_NOTEBOOK_DIR=/zeppelin/notebook
-    user: root
     networks:
       - lakehouse_network
 
