@@ -147,12 +147,19 @@ services:
     container_name: zeppelin
     ports:
       - "8888:8888"
+    deploy:
+      resources:
+        reservations:
+          cpus: '12.0'
+          memory: 12G
+        limits:
+          cpus: '13.0'
+          memory: 13G
     volumes:
       - ./spark_apps:/zeppelin/spark
-      - ./notebooks:/opt/bitnami/zeppelin/notebook
-      - ./zeppelin/interpreter.json:/opt/bitnami/zeppelin/conf/interpreter.json
     environment:
       - SPARK_MASTER=spark://spark-master:7077
+    entrypoint: ["/opt/bitnami/zeppelin/bin/zeppelin-daemon.sh", "start"]
     networks:
       - lakehouse_network
 

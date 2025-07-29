@@ -12,14 +12,19 @@ ENV SPARK_HOME=/opt/bitnami/spark
 
 WORKDIR ${ZEPPELIN_HOME}
 
-RUN apt update && apt install tar -y
+COPY interpreter.json ./conf/
+# COPY zeppelin-${ZEPPELIN_VERSION}/zeppelin-${ZEPPELIN_VERSION}-bin-all.tgz ./
+RUN apt update && apt install tar git nano -y
 RUN curl --progress-bar -L --retry 3  https://dlcdn.apache.org/zeppelin/zeppelin-${ZEPPELIN_VERSION}/zeppelin-${ZEPPELIN_VERSION}-bin-all.tgz -O \
     && tar -zxvf zeppelin-*-bin-all.tgz \
     && mv zeppelin-*-bin-all/* ./ \
     && rm zeppelin-*-bin-all.tgz \
-    && rm -r zeppelin-*-bin-all
-RUN sed -i 's/<value>127.0.0.1</value>/<value>0.0.0.0</value>/g' ./conf/zeppelin-site.xml.template
-RUN ./bin/install-interpreter.sh --all
+    && rm -r zeppelin-*-bin-all \
+    && sed -i 's/127.0.0.1/0.0.0.0/g' ./conf/zeppelin-site.xml.template \
+    && sed -i 's/#admin/admin/g' ./conf/shiro.ini.template \
+    && mv ./conf/zeppelin-site.xml.template ./conf/zeppelin-site.xml \
+    && mv ./conf/shiro.ini.template ./conf/shiro.ini \
+    && ./bin/install-interpreter.sh --all
 
 RUN adduser defaultuser
 RUN usermod -u 1000 --gid 0 defaultuser
@@ -28,8 +33,4 @@ RUN chown -R defaultuser:defaultuser /opt/bitnami
 RUN chmod -R 775 /opt/bitnami
 
 USER defaultuser
-WORKDIR /opt/bitnami/zeppelin/notebooks
-
 EXPOSE ${ZEPPELIN_PORT}
-
-CMD [ "./bin/zeppelin-daemon.sh start" ]

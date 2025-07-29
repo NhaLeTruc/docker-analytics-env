@@ -47,4 +47,6 @@ curl -X POST -H "Content-Type: application/json" -d '{"kind": "spark"}' http://l
 curl http://localhost:8998/sessions/{sessionId}
 curl -X POST -H "Content-Type: application/json" -d '{"code": "1 + 1"}' http://localhost:8998/sessions/{sessionId}/statements
 curl -X POST -H "Content-Type: application/json" -d '{"file": "/path/to/your/spark_app.jar", "className": "com.example.MySparkApp"}' http://localhost:8998/batches
+
+sudo docker cp f3be49b69438:/opt/bitnami/zeppelin/logs/zeppelin-defaultuser-f3be49b69438.out ./
 ```
