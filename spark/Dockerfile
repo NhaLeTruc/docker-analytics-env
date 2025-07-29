@@ -8,8 +8,9 @@ ENV LIVY_CONF_DIR "${LIVY_HOME}/conf"
 ENV LIVY_PORT 8998
 WORKDIR /opt/bitnami/
 
-RUN apt install unzip \
-  && curl --progress-bar -L --retry 3 "http://archive.apache.org/dist/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}-bin.zip" -O \
+RUN apt update && apt install unzip
+
+RUN curl --progress-bar -L --retry 3 "http://archive.apache.org/dist/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}-bin.zip" -O \
   && unzip -qq "apache-livy-${LIVY_VERSION}-bin.zip" \
   && mv "apache-livy-${LIVY_VERSION}-bin" "${LIVY_HOME}" \
   && rm -rf "apache-livy-${LIVY_VERSION}-bin.zip" \
