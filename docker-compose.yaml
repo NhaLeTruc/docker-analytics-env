@@ -43,9 +43,11 @@ services:
   ########################
   spark-master:
     # image: bitnami/spark:3.5.6-debian-12-r0
-    # image: bitnami/spark:3.0.2-debian-10-r16
     container_name: spark-master
-    # command: bin/spark-class org.apache.spark.deploy.master.Master
+    command: 
+      - bin/spark-class org.apache.spark.deploy.master.Master
+      - bin/spark-class org.apache.spark.deploy.history.HistoryServer
+      - /opt/bitnami/livy/bin/livy-server
     build: 
       context: ./spark
       dockerfile: Dockerfile
@@ -74,19 +76,18 @@ services:
       - ./spark/livy/conf:/opt/bitnami/livy/conf/
       - ./spark_apps:/opt/bitnami/spark/apps
       - spark-logs:/tmp/spark-events
-    entrypoint: >
-      /bin/bash -c "
-      /opt/bitnami/spark/sbin/start-master.sh & \
-      /opt/bitnami/spark/sbin/start-history-server.sh & \
-      /opt/bitnami/livy/bin/livy-server & \
-      tail -f /dev/null
-      "
+    # entrypoint: >
+    #   /bin/bash -c "
+    #   /opt/bitnami/spark/sbin/start-master.sh & \
+    #   /opt/bitnami/spark/sbin/start-history-server.sh & \
+    #   /opt/bitnami/livy/bin/livy-server & \
+    #   tail -f /dev/null
+    #   "
     networks:
       - lakehouse_network
 
   spark-worker-1:
-    # image: bitnami/spark:3.5.6-debian-12-r0
-    image: bitnami/spark:3.0.2-debian-10-r16
+    image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-worker-1
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     env_file: .env
@@ -113,8 +114,7 @@ services:
       - lakehouse_network
 
   spark-worker-2:
-    # image: bitnami/spark:3.5.6-debian-12-r0
-    image: bitnami/spark:3.0.2-debian-10-r16
+    image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-worker-2
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     env_file: .env
@@ -230,9 +230,9 @@ services:
     environment:
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-      - QUARKUS_PROFILE=dev
-      - QUARKUS_HTTP_PORT=19120
       - NESSIE_VERSION_STORE_TYPE=JDBC
+      - QUARKUS_PROFILE=dev
+      - QUARKUS_HTTP_PORT=19120      
       - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       - QUARKUS_DATASOURCE_USERNAME=${POSTGRES_USER}
       - QUARKUS_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
