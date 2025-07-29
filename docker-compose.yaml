@@ -42,18 +42,18 @@ services:
   ## Spark and Notebook ##
   ########################
   spark-master:
-    # image: bitnami/spark:3.5.6-debian-12-r0
+    image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-master
-    command: 
-      - bin/spark-class org.apache.spark.deploy.master.Master
-      - bin/spark-class org.apache.spark.deploy.history.HistoryServer
-      - /opt/bitnami/livy/bin/livy-server
-    build: 
-      context: ./spark
-      dockerfile: Dockerfile
+    # command: 
+    #   - bin/spark-class org.apache.spark.deploy.master.Master
+    #   - bin/spark-class org.apache.spark.deploy.history.HistoryServer
+    #   - /opt/bitnami/livy/bin/livy-server
+    # build: 
+    #   context: ./spark
+    #   dockerfile: Dockerfile
     env_file: .env
     healthcheck:
-      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/18080' && bash -c '</dev/tcp/localhost/8998'; then exit 0; else exit 1; fi"]
+      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/18080'; then exit 0; else exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,19 +70,18 @@ services:
       - "7077:7077"             # Master Port for job submissions
       - "18080:18080"           # Spark History Server
       - "4040-4050:4040-4050"   # Driver UIs (one port per SparkContext)
-      - "8998:8998"             # Livy REST
+      # - "8998:8998"             # Livy REST
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./spark/livy/conf:/opt/bitnami/livy/conf/
+      # - ./spark/livy/conf:/opt/bitnami/livy/conf/
       - ./spark_apps:/opt/bitnami/spark/apps
       - spark-logs:/tmp/spark-events
-    # entrypoint: >
-    #   /bin/bash -c "
-    #   /opt/bitnami/spark/sbin/start-master.sh & \
-    #   /opt/bitnami/spark/sbin/start-history-server.sh & \
-    #   /opt/bitnami/livy/bin/livy-server & \
-    #   tail -f /dev/null
-    #   "
+    entrypoint: >
+      /bin/bash -c "
+      /opt/bitnami/spark/sbin/start-master.sh & \
+      /opt/bitnami/spark/sbin/start-history-server.sh & \
+      tail -f /dev/null
+      "
     networks:
       - lakehouse_network
 
@@ -140,33 +139,20 @@ services:
     networks:
       - lakehouse_network
  
-  jupyterlab:
-    container_name: jupyterlab
-    depends_on:
-      spark-master:
-        condition: service_healthy
-    build: 
-      context: ./jupyter
-      dockerfile: Dockerfile.jupyterlab
-    command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX' --NotebookApp.iopub_data_rate_limit=1000000000
+  zeppelin:
+    image: apache/zeppelin:0.12.0
+    container_name: zeppelin
     ports:
-      - 8888:8888
+      - "8888:8080"
     volumes:
-      - ./jupyter/notebooks:/opt/bitnami/notebooks # persistent storage
+      - ./spark_apps:/zeppelin/spark
+      - ./notebooks:/opt/zeppelin/notebook
+      - ./zeppelin/interpreter.json:/zeppelin/conf/interpreter.json
     environment:
-      - JUPYTER_ENABLE_LAB=yes
-      - JUPYTER_CONFIG_DIR=/opt/bitnami/notebooks/config
-      - JUPYTER_PATH=/opt/bitnami/notebooks/data
-      - JUPYTER_RUNTIME_DIR=/opt/bitnami/notebooks/runtime
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-      - MINIO_END_POINT=minio-lake:9000
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_HOME=/zeppelin/spark
+      - ZEPPELIN_NOTEBOOK_DIR=/zeppelin/notebook
+    user: root
     networks:
       - lakehouse_network
 

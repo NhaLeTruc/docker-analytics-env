@@ -85,22 +85,23 @@ services:
       spark-master:
         condition: service_healthy
     build: 
-      context: ./spark
+      context: ./jupyter
       dockerfile: Dockerfile.jupyterlab
-    command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX'
+    command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX' --NotebookApp.iopub_data_rate_limit=1000000000
     ports:
       - 8888:8888
     volumes:
-      - ./spark/notebooks:/notebooks # persistent storage
+      - ./jupyter/notebooks:/opt/bitnami/notebooks # persistent storage
     environment:
-      JUPYTER_ENABLE_LAB: yes
-      JUPYTER_CONFIG_DIR: /notebooks/config
-      JUPYTER_PATH: /notebooks/data
-      JUPYTER_RUNTIME_DIR: /notebooks/runtime
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_CONFIG_DIR=/opt/bitnami/notebooks/config
+      - JUPYTER_PATH=/opt/bitnami/notebooks/data
+      - JUPYTER_RUNTIME_DIR=/opt/bitnami/notebooks/runtime
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_END_POINT=minio-lake:9000
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
       interval: 10s
       timeout: 5s
       retries: 5
