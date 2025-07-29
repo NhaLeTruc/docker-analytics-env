@@ -9,8 +9,8 @@ services:
     image: bitnami/minio:2025.6.13-debian-12-r0
     container_name: minio-lake
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Web console
@@ -22,7 +22,7 @@ services:
       start_period: 10s
     volumes:
       - minio-data:/opt/bitnami/minio/data
-      - ./dummy:/opt/bitnami/minio/dummy      
+      - ./data_seeder/dummy:/opt/bitnami/minio/dummy      
     entrypoint: >
       /bin/sh -c "
       minio server /bitnami/minio/data --console-address ':9001' &
@@ -48,21 +48,20 @@ services:
     build: 
       context: ./spark
       dockerfile: Dockerfile
-    env_file:
-      - spark/.env
-      - .env
+    env_file: .env
     healthcheck:
-      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080'; then exit 0; else exit 1; fi"]
+      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/18080' && bash -c '</dev/tcp/localhost/8998'; then exit 0; else exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
     environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_END_POINT: minio-lake:9000
-      SPARK_MASTER_HOST: spark-master
-      SPARK_HISTORY_OPTS: -Dspark.history.fs.logDirectory=/tmp/spark-events
+      - SPARK_MODE=master
+      - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=/tmp/spark-events
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
     ports:
       - "8080:8080"             # Master Web UI
       - "7077:7077"             # Master Port for job submissions
@@ -71,13 +70,14 @@ services:
       - "8998:8998"             # Livy REST
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./spark/livy/conf:/opt/bitnami/livy/conf/
       - ./spark_apps:/opt/bitnami/spark/apps
-      - ./spark/notebooks:/opt/bitnami/notebooks
       - spark-logs:/tmp/spark-events
     entrypoint: >
       /bin/bash -c "
       /opt/bitnami/spark/sbin/start-master.sh & \
       /opt/bitnami/spark/sbin/start-history-server.sh & \
+      /opt/bitnami/livy/bin/livy-server & \
       tail -f /dev/null
       "
     networks:
@@ -87,36 +87,7 @@ services:
     image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-worker-1
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
-    env_file:
-      - spark/.env
-    depends_on:
-      spark-master:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8081" ]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
-    environment:
-      SPARK_MODE: worker
-      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
-      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY}
-      SPARK_MASTER_URL: spark://spark-master:7077
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-    volumes:
-      - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./spark_apps:/opt/bitnami/spark/apps
-    networks:
-      - lakehouse_network
-
-  spark-worker-2:
-    image: bitnami/spark:3.5.6-debian-12-r0
-    container_name: spark-worker-2
-    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
-    env_file:
-      - spark/.env
+    env_file: .env
     depends_on:
       spark-master:
         condition: service_healthy
@@ -127,15 +98,42 @@ services:
       retries: 5
       start_period: 30s
     environment:
-      SPARK_MODE: worker
-      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES}
-      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY}
-      SPARK_MASTER_URL: spark://spark-master:7077
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      - SPARK_MODE=worker
+      - SPARK_WORKER_CORES=${SPARK_WORKER_CORES}
+      - SPARK_WORKER_MEMORY=${SPARK_WORKER_MEMORY}
+      - SPARK_MASTER_URL=spark://spark-master:7077
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./spark/livy/conf:/opt/bitnami/livy/conf/
       - ./spark_apps:/opt/bitnami/spark/apps
+      - spark-logs:/tmp/spark-events
+    networks:
+      - lakehouse_network
+
+  spark-worker-2:
+    image: bitnami/spark:3.5.6-debian-12-r0
+    container_name: spark-worker-2
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    env_file: .env
+    depends_on:
+      spark-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8081'"]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_WORKER_CORES=${SPARK_WORKER_CORES}
+      - SPARK_WORKER_MEMORY=${SPARK_WORKER_MEMORY}
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    volumes:
+      - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./spark/livy/conf:/opt/bitnami/livy/conf/
+      - ./spark_apps:/opt/bitnami/spark/apps
+      - spark-logs:/tmp/spark-events
     networks:
       - lakehouse_network
  
@@ -145,23 +143,23 @@ services:
       spark-master:
         condition: service_healthy
     build: 
-      context: ./spark
+      context: ./jupyter
       dockerfile: Dockerfile.jupyterlab
-    command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX'
+    command: python -m jupyterlab --ip "0.0.0.0" --no-browser --NotebookApp.token='XXXXX-XXXX-XXXX --NotebookApp.iopub_data_rate_limit=1000000000'
     ports:
       - 8888:8888
     volumes:
-      - ./spark/notebooks:/notebooks # persistent storage
+      - ./jupyter/notebooks:/home/jovyan/notebooks # persistent storage
     environment:
-      JUPYTER_ENABLE_LAB: yes
-      JUPYTER_CONFIG_DIR: /notebooks/config
-      JUPYTER_PATH: /notebooks/data
-      JUPYTER_RUNTIME_DIR: /notebooks/runtime
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_END_POINT: minio-lake:9000
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_CONFIG_DIR=/home/jovyan/notebooks/config
+      - JUPYTER_PATH=/home/jovyan/notebooks/data
+      - JUPYTER_RUNTIME_DIR=/home/jovyan/notebooks/runtime
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_END_POINT=minio-lake:9000
     healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8088'"]
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
       interval: 10s
       timeout: 5s
       retries: 5

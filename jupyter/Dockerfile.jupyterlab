@@ -28,7 +28,7 @@ RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cu
 RUN jupyter server extension enable --py sparkmagic
 
 RUN usermod -u 1000 --gid 0 $NB_USER
-RUN chown -R $NB_USER:$NB_USER /home/$NB_USER/
+RUN chown -R 1000:0 /home/$NB_USER/
 RUN chmod -R 775 /home/$NB_USER/
 
 USER $NB_USER

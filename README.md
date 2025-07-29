@@ -4,16 +4,13 @@ Template for typical data engineer's local development works. Containerized loca
 
 ## Components
 
-1. Apache Spark
-2. Apache Spark Thrift
-3. Nessie Catalog
-4. Minio
-5. Apache Iceberg
-6. Postgres - backend only
-7. PgAdmin4
-8. JupyterLab
-9. Apache Superset
-10. Data Quality Ops
+1. Apache Spark & Livy & Iceberg
+2. Nessie Catalog
+3. Minio
+4. Postgres
+5. PgAdmin4
+6. JupyterLab & SparkMagic
+7. Apache Superset
 
 ## Getting Started
 
@@ -45,4 +42,9 @@ sudo docker compose down -rmi all
 jupyter kernelspec list
 
 cat /etc/os-release
+
+curl -X POST -H "Content-Type: application/json" -d '{"kind": "spark"}' http://localhost:8998/sessions
+curl http://localhost:8998/sessions/{sessionId}
+curl -X POST -H "Content-Type: application/json" -d '{"code": "1 + 1"}' http://localhost:8998/sessions/{sessionId}/statements
+curl -X POST -H "Content-Type: application/json" -d '{"file": "/path/to/your/spark_app.jar", "className": "com.example.MySparkApp"}' http://localhost:8998/batches
 ```

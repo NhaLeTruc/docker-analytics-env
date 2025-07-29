@@ -8,7 +8,7 @@ down:
 	sudo docker compose down --volumes --remove-orphans
 
 deep_clean:
-	sudo docker compose down --volumes --remove-orphans \
+	sudo docker compose down --volumes --remove-orphans
 	sudo docker builder prune -fa
 
 spark_submit:
