@@ -1,6 +1,4 @@
-# FROM bitnami/spark:3.5.6-debian-12-r0
-# Livy 0.8.0 max support is spark 3.0
-FROM bitnami/spark:3.0.2-debian-10-r16
+FROM bitnami/spark:3.5.6-debian-12-r0
 
 USER root
 
