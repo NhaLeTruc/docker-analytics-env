@@ -1,19 +1,21 @@
-FROM bitnami/spark:3.5.6-debian-12-r0
+# FROM bitnami/spark:3.5.6-debian-12-r0
+# Livy 0.8.0 max support is spark 3.0
+FROM bitnami/spark:3.0.2-debian-10-r16
 
 USER root
 
-ARG LIVY_VERSION=0.7.1-incubating
-ENV LIVY_HOME /opt/bitnami/livy
-ENV LIVY_CONF_DIR "${LIVY_HOME}/conf"
-ENV LIVY_PORT 8998
+ARG LIVY_VERSION=0.8.0-incubating
+ENV LIVY_HOME=/opt/bitnami/livy
+ENV LIVY_CONF_DIR=${LIVY_HOME}/conf
+ENV LIVY_PORT=8998
 WORKDIR /opt/bitnami/
 
 RUN apt update && apt install unzip
 
-RUN curl --progress-bar -L --retry 3 "http://archive.apache.org/dist/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}-bin.zip" -O \
-  && unzip -qq "apache-livy-${LIVY_VERSION}-bin.zip" \
-  && mv "apache-livy-${LIVY_VERSION}-bin" "${LIVY_HOME}" \
-  && rm -rf "apache-livy-${LIVY_VERSION}-bin.zip" \
+RUN curl --progress-bar -L --retry 3 "http://archive.apache.org/dist/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}_2.12-bin.zip" -O \
+  && unzip -qq "apache-livy-${LIVY_VERSION}_2.12-bin.zip" \
+  && mv "apache-livy-${LIVY_VERSION}_2.12-bin" "${LIVY_HOME}" \
+  && rm -rf "apache-livy-${LIVY_VERSION}_2.12-bin.zip" \
   && mkdir ${LIVY_HOME}/logs
 
 RUN adduser defaultuser

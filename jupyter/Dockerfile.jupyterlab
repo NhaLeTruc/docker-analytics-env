@@ -1,9 +1,9 @@
-FROM bitnami/spark:3.5.6-debian-12-r0
+# FROM bitnami/spark:3.5.6-debian-12-r0
+# Livy 0.8.0 max support is spark 3.0
+FROM bitnami/spark:3.0.2-debian-10-r16
 
 USER root
-
-RUN pip install --upgrade pip
-RUN pip install --upgrade --ignore-installed setuptools
+WORKDIR /opt/bitnami/
 
 RUN apt update
 RUN apt install -y \
@@ -12,11 +12,9 @@ RUN apt install -y \
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-
-
 RUN mkdir /opt/bitnami/.sparkmagic
 COPY sparkmagic/default_config.json /opt/bitnami/.sparkmagic/config.json
-RUN sed -i 's/localhost/spark/g' /opt/bitnami/.sparkmagic/config.json
+
 RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkkernel
 RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/pysparkkernel
 RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkrkernel
@@ -25,8 +23,11 @@ RUN jupyter server extension enable --py sparkmagic
 RUN adduser defaultuser
 RUN usermod -u 1000 --gid 0 defaultuser
 
+RUN chown -R defaultuser:defaultuser /.*
+RUN chmod -R 775 /.*
 RUN chown -R defaultuser:defaultuser /opt/bitnami
 RUN chmod -R 775 /opt/bitnami
 
 USER defaultuser
+WORKDIR /opt/bitnami/notebooks
 EXPOSE 8888
