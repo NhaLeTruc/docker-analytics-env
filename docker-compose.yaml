@@ -74,7 +74,7 @@ services:
       - "7077:7077"             # Master Port for job submissions
       - "18080:18080"           # Spark History Server
       - "4040-4050:4040-4050"   # Driver UIs (one port per SparkContext)
-      - "8888:8888"
+      - "8888:8888"             # Zeppelin UI
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./spark_apps:/opt/bitnami/spark/apps
@@ -83,7 +83,7 @@ services:
       /bin/bash -c "
       /opt/bitnami/spark/sbin/start-master.sh & \
       /opt/bitnami/spark/sbin/start-history-server.sh & \
-      /opt/bitnami/zeppelin/bin/zeppelin-daemon.sh start \
+      /opt/bitnami/zeppelin/bin/zeppelin-daemon.sh start & \
       tail -f /dev/null
       "
     networks:
