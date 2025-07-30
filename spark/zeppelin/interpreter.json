@@ -530,12 +530,12 @@
         },
         "spark.cores.max": {
           "name": "spark.cores.max",
-          "value": "",
+          "value": "12",
           "type": "number"
         },
         "spark.executor.memory": {
           "name": "spark.executor.memory",
-          "value": "8G",
+          "value": "12G",
           "type": "string"
         },
         "zeppelin.spark.sql.interpolation": {
