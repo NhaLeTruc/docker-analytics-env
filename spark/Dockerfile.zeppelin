@@ -12,9 +12,8 @@ ENV SPARK_HOME=/opt/bitnami/spark
 
 WORKDIR ${ZEPPELIN_HOME}
 
-COPY interpreter.json ./conf/
-# COPY zeppelin-${ZEPPELIN_VERSION}/zeppelin-${ZEPPELIN_VERSION}-bin-all.tgz ./
 RUN apt update && apt install tar git nano -y
+# COPY ./zeppelin/zeppelin-${ZEPPELIN_VERSION}-bin-all.tgz ./
 RUN curl --progress-bar -L --retry 3  https://dlcdn.apache.org/zeppelin/zeppelin-${ZEPPELIN_VERSION}/zeppelin-${ZEPPELIN_VERSION}-bin-all.tgz -O \
     && tar -zxvf zeppelin-*-bin-all.tgz \
     && mv zeppelin-*-bin-all/* ./ \
@@ -25,6 +24,7 @@ RUN curl --progress-bar -L --retry 3  https://dlcdn.apache.org/zeppelin/zeppelin
     && mv ./conf/zeppelin-site.xml.template ./conf/zeppelin-site.xml \
     && mv ./conf/shiro.ini.template ./conf/shiro.ini \
     && ./bin/install-interpreter.sh --all
+COPY ./zeppelin/interpreter.json ./conf/
 
 RUN adduser defaultuser
 RUN usermod -u 1000 --gid 0 defaultuser
@@ -33,4 +33,10 @@ RUN chown -R defaultuser:defaultuser /opt/bitnami
 RUN chmod -R 775 /opt/bitnami
 
 USER defaultuser
+WORKDIR /opt/bitnami
+
 EXPOSE ${ZEPPELIN_PORT}
+EXPOSE 8080
+EXPOSE 8081
+EXPOSE 7077
+EXPOSE 18080
