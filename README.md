@@ -5,11 +5,24 @@ Template for typical data engineer's local development works. Containerized loca
 ## Components
 
 1. Apache Spark & Iceberg
-2. Nessie Catalog
+2. JupyterLab & Toree
 3. Minio
-4. Postgres & PgAdmin4
-5. Zeppelin/JupyterLab & SparkMagic
-6. Apache Superset
+4. Nessie Catalog
+5. Apache Superset
+6. Postgres & PgAdmin4
+
+## Notes
+
+- Zeppelin
+  - Spark interpreters only support 3.0 and below
+- Livy
+  - Livy 0.7.0, the last official release, was built for Spark 2.4.5 and Scala 2.11, and will not directly run with Spark 3.x due to Scala version incompatibilities.
+  - To use Livy with Spark 3.x (including 3.5), it is generally necessary to build Livy from its master branch with the appropriate Spark and Scala versions specified during the build process. This involves configuring the pom.xml file to align with the desired Spark 3.5 and Scala 2.12 or 2.13 versions.
+  - Cloud providers: like Amazon EMR or Azure HDInsight may offer specific versions of Livy pre-configured for compatibility with their Spark 3.x deployments. For instance, EMR 7.x with Spark 3.5 often includes Livy 0.7 or 0.8.
+- SparkMagic
+  - Blocked by Livy's obsolescence.
+- spylon-kernel
+  - Apache Spark 2.1.1 compiled for Scala 2.11
 
 ## Getting Started
 
