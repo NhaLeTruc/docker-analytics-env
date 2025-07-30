@@ -48,34 +48,37 @@ services:
 
   zeppelin:
     # image: apache/zeppelin:0.12.0
-    container_name: zeppelin
-    build: 
-      context: ./spark
+    build:
+      context: ./zeppelin
       dockerfile: Dockerfile.zeppelin
-    depends_on:
-      spark-master:
-        condition: service_healthy
+    container_name: zeppelin    
+    user: "${UID}:${GID}"
+    command: ["sh", "-c", "/opt/bitnami/zeppelin/bin/zeppelin-daemon.sh start"]
     ports:
-      - "8888:8080"
-    volumes:
-      - ./spark/notebooks:/opt/zeppelin/notebooks
-      - zeppelin-logs:/opt/zeppelin/logs
-    environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_END_POINT: minio-lake:9000
-      SPARK_MASTER: spark://spark-master:7077
-      SPARK_HOME: /opt/zeppelin/spark
-      PYSPARK_PYTHON: python3.9
-      PYSPARK_DRIVER_PYTHON: python3
-      ZEPPELIN_LOG_DIR: /opt/zeppelin/logs
-      ZEPPELIN_NOTEBOOK_DIR: /opt/zeppelin/notebooks
+      - "8888:8888"
     healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
       interval: 15s
       timeout: 15s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        reservations:
+          cpus: '12.0'
+          memory: 12G
+        limits:
+          cpus: '13.0'
+          memory: 13G
+    volumes:
+      - ./spark_apps:/zeppelin/spark
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+    entrypoint: >
+      /bin/bash -c "
+      /opt/bitnami/zeppelin/bin/zeppelin-daemon.sh start \
+      tail -f /dev/null
+      "
     networks:
       - lakehouse_network
 

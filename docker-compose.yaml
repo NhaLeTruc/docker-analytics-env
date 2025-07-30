@@ -42,22 +42,26 @@ services:
   ## Spark and Notebook ##
   ########################
   spark-master:
-    image: bitnami/spark:3.5.6-debian-12-r0
+    # image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-master
-    # command: 
-    #   - bin/spark-class org.apache.spark.deploy.master.Master
-    #   - bin/spark-class org.apache.spark.deploy.history.HistoryServer
-    #   - /opt/bitnami/livy/bin/livy-server
-    # build: 
-    #   context: ./spark
-    #   dockerfile: Dockerfile
+    build:
+      context: spark/
+      dockerfile: Dockerfile.zeppelin
     env_file: .env
     healthcheck:
-      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/18080'; then exit 0; else exit 1; fi"]
+      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/18080' && bash -c '</dev/tcp/localhost/8888'; then exit 0; else exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    deploy:
+      resources:
+        reservations:
+          cpus: '12.0'
+          memory: 12G
+        limits:
+          cpus: '13.0'
+          memory: 13G
     environment:
       - SPARK_MODE=master
       - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=/tmp/spark-events
@@ -70,16 +74,16 @@ services:
       - "7077:7077"             # Master Port for job submissions
       - "18080:18080"           # Spark History Server
       - "4040-4050:4040-4050"   # Driver UIs (one port per SparkContext)
-      # - "8998:8998"             # Livy REST
+      - "8888:8888"
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      # - ./spark/livy/conf:/opt/bitnami/livy/conf/
       - ./spark_apps:/opt/bitnami/spark/apps
       - spark-logs:/tmp/spark-events
     entrypoint: >
       /bin/bash -c "
       /opt/bitnami/spark/sbin/start-master.sh & \
       /opt/bitnami/spark/sbin/start-history-server.sh & \
+      /opt/bitnami/zeppelin/bin/zeppelin-daemon.sh start \
       tail -f /dev/null
       "
     networks:
@@ -106,7 +110,6 @@ services:
       - SPARK_MASTER_URL=spark://spark-master:7077
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./spark/livy/conf:/opt/bitnami/livy/conf/
       - ./spark_apps:/opt/bitnami/spark/apps
       - spark-logs:/tmp/spark-events
     networks:
@@ -133,39 +136,14 @@ services:
       - SPARK_MASTER_URL=spark://spark-master:7077
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./spark/livy/conf:/opt/bitnami/livy/conf/
       - ./spark_apps:/opt/bitnami/spark/apps
       - spark-logs:/tmp/spark-events
     networks:
       - lakehouse_network
  
-  zeppelin:
-    # image: apache/zeppelin:0.12.0
-    build:
-      context: ./zeppelin
-      dockerfile: Dockerfile.zeppelin
-    container_name: zeppelin
-    ports:
-      - "8888:8888"
-    deploy:
-      resources:
-        reservations:
-          cpus: '12.0'
-          memory: 12G
-        limits:
-          cpus: '13.0'
-          memory: 13G
-    volumes:
-      - ./spark_apps:/zeppelin/spark
-    environment:
-      - SPARK_MASTER=spark://spark-master:7077
-    entrypoint: ["/opt/bitnami/zeppelin/bin/zeppelin-daemon.sh", "start"]
-    networks:
-      - lakehouse_network
-
-  #################################################
-  ## Postgres DB for superset and nessie backend ##
-  #################################################
+  #################
+  ## Postgres DB ##
+  #################
   postgres:
     image: postgres:16
     container_name: postgres-metadata

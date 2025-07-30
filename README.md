@@ -4,13 +4,12 @@ Template for typical data engineer's local development works. Containerized loca
 
 ## Components
 
-1. Apache Spark & Livy & Iceberg
+1. Apache Spark & Iceberg
 2. Nessie Catalog
 3. Minio
-4. Postgres
-5. PgAdmin4
-6. JupyterLab & SparkMagic
-7. Apache Superset
+4. Postgres & PgAdmin4
+5. Zeppelin/JupyterLab & SparkMagic
+6. Apache Superset
 
 ## Getting Started
 
