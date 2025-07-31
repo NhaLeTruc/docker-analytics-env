@@ -20,10 +20,8 @@ RUN jupyter toree install \
 
 RUN adduser defaultuser \
     && usermod -u 1000 --gid 0 defaultuser \
-    && chown -R defaultuser:defaultuser /.* \
-    && chmod -R 775 /.* \
-    && chown -R defaultuser:defaultuser /opt/bitnami \
-    && chmod -R 775 /opt/bitnami
+    && chown -R defaultuser:defaultuser /tmp /.* /opt/bitnami \
+    && chmod -R 775 /tmp /.* /opt/bitnami
 
 USER defaultuser
 WORKDIR ${JUPYTER_HOME}/notebooks
