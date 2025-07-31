@@ -79,9 +79,9 @@ services:
       - "4040-4050:4040-4050"   # Driver UIs (one port per SparkContext)
       - "8888:8888"             # JupyterLab
     volumes:
-      - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf      
+      - ./spark/logs:/tmp/spark-events
       - ./spark_apps:/opt/bitnami/spark/apps
-      - spark-logs:/tmp/spark-events
       - ./spark/jupyter/notebooks:/opt/bitnami/jupyter/notebooks
     entrypoint: >
       /bin/bash -c "
@@ -248,7 +248,6 @@ networks:
 
 volumes:
   minio-data:
-  spark-logs:
   pgadata:
   superset_data:
   meta_data:

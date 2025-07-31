@@ -16,7 +16,7 @@ RUN apt update && apt install tar git nano -y \
 RUN jupyter toree install \
     --interpreters=Scala,PySpark,SparkR,SQL \
     --spark_home=/opt/bitnami/spark/ \
-    --spark_opts='--master=spark://127.0.0.1:7077' 
+    --spark_opts='--master=local[*]' 
 
 RUN adduser defaultuser \
     && usermod -u 1000 --gid 0 defaultuser \
