@@ -118,26 +118,31 @@ services:
     # command: bin/spark-class org.apache.spark.deploy.master.Master
     build: 
       context: ./spark
-      dockerfile: Dockerfile
-    env_file:
-      - spark/.env
-      - .env
+      dockerfile: Dockerfile.jupyterlab
+    env_file: .env
     healthcheck:
-      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/8888'; then exit 0; else exit 1; fi"]
+      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/18080' && bash -c '</dev/tcp/localhost/8888'; then exit 0; else exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    deploy:
+      resources:
+        reservations:
+          cpus: '12.0'
+          memory: 12G
+        limits:
+          cpus: '13.0'
+          memory: 13G
+    user: ${UID}:${GID}
     environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_END_POINT: minio-lake:9000
-      SPARK_MASTER_HOST: spark-master
-      SPARK_HISTORY_OPTS: -Dspark.history.fs.logDirectory=/tmp/spark-events
-      JUPYTER_ENABLE_LAB: yes
-      JUPYTER_CONFIG_DIR: /opt/bitnami/notebooks/config
-      JUPYTER_PATH: /opt/bitnami/notebooks/data
-      JUPYTER_RUNTIME_DIR: /opt/bitnami/notebooks/runtime
+      - SPARK_MODE=master
+      - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=/tmp/spark-events
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - JUPYTER_ENABLE_LAB=yes      
     ports:
       - "8080:8080"             # Master Web UI
       - "7077:7077"             # Master Port for job submissions
@@ -147,13 +152,13 @@ services:
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./spark_apps:/opt/bitnami/spark/apps
-      - ./spark/notebooks:/opt/bitnami/notebooks
-      - spark-logs:/tmp/spark-events
+      - ./spark/logs:/tmp/spark-events
+      - ./spark/jupyter/notebooks:/opt/bitnami/jupyter/notebooks
     entrypoint: >
       /bin/bash -c "
       /opt/bitnami/spark/sbin/start-master.sh & \
       /opt/bitnami/spark/sbin/start-history-server.sh & \
-      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXXX-XXXXX-XXXXX' & \
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXXX-XXXXX-XXXXX' --NotebookApp.iopub_data_rate_limit=1000000000 & \
       tail -f /dev/null
       "
     networks:
