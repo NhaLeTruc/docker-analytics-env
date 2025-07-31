@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/product.schema.json",
+  "title": "Product",
+  "description": "Schema for an e-commerce product",
+  "type": "object",
+  "properties": {
+    "productId": {
+      "type": "string",
+      "description": "Unique identifier for the product"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the product"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the product"
+    },
+    "price": {
+      "type": "number",
+      "format": "float",
+      "minimum": 0,
+      "description": "Current price of the product"
+    },
+    "currency": {
+      "type": "string",
+      "description": "Currency of the product price (e.g., USD, EUR)",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category the product belongs to"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Brand of the product"
+    },
+    "imageUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL of the product image"
+    },
+    "availability": {
+      "type": "string",
+      "enum": ["InStock", "OutOfStock", "PreOrder"],
+      "description": "Availability status of the product"
+    },
+    "reviews": {
+      "type": "array",
+      "description": "List of customer reviews for the product",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reviewerName": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string"
+          },
+          "reviewDate": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": ["reviewerName", "rating"]
+      }
+    }
+  },
+  "required": ["productId", "name", "price", "currency", "category", "availability"]
+}
