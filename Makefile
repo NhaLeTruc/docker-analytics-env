@@ -13,3 +13,9 @@ deep_clean:
 
 spark_submit:
 	sudo docker exec spark-master spark-submit --master spark://spark-master:7077 --deploy-mode client ./opt/bitnami/spark/apps$(app)
+
+run-scaled:
+	make down && docker-compose up --scale spark-worker=3
+
+build-progress:
+	docker-compose build --no-cache --progress=plain
