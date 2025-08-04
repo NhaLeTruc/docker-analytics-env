@@ -55,14 +55,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    deploy:
-      resources:
-        reservations:
-          cpus: '12.0'
-          memory: 12G
-        limits:
-          cpus: '13.0'
-          memory: 13G
     environment:
       - SPARK_MODE=master
       - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=/tmp/spark-events
@@ -202,11 +194,10 @@ services:
       retries: 5
       start_period: 30s
     environment:
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
       - NESSIE_VERSION_STORE_TYPE=JDBC
+      - NESSIE_VERSION_STORE_PERSIST_JDBC_DATASOURCE=postgresql
       - QUARKUS_PROFILE=dev
-      - QUARKUS_HTTP_PORT=19120      
+      - QUARKUS_HTTP_PORT=19120
       - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       - QUARKUS_DATASOURCE_USERNAME=${POSTGRES_USER}
       - QUARKUS_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
