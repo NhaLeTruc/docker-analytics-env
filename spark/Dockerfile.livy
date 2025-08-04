@@ -5,6 +5,13 @@ USER root
 ARG LIVY_VERSION=0.8.0-incubating
 ENV LIVY_HOME=/opt/bitnami/livy
 ENV LIVY_CONF_DIR=${LIVY_HOME}/conf
+
+RUN curl -L https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.4.3/iceberg-spark-runtime-3.5_2.12-1.4.3.jar -O --output-dir /opt/bitnami/spark/jars/ \
+    curl -L https://repo1.maven.org/maven2/org/projectnessie/nessie-integrations/nessie-spark-extensions-3.5_2.12/0.78.0/nessie-spark-extensions-3.5_2.12-0.78.0.jar -O --output-dir /opt/bitnami/spark/jars/ \
+    curl -L https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.7/postgresql-42.7.7.jar -O --output-dir /opt/bitnami/spark/jars/ \
+    curl -L https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.31.78/bundle-2.31.78.jar -O --output-dir /opt/bitnami/spark/jars/ \
+    curl -L https://repo1.maven.org/maven2/software/amazon/awssdk/url-connection-client/2.31.78/url-connection-client-2.31.78.jar -O --output-dir /opt/bitnami/spark/jars/ 
+    
 WORKDIR /opt/bitnami/
 
 RUN apt update && apt install unzip
