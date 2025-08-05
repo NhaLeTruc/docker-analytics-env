@@ -9,10 +9,12 @@ minio-data/
 
 # Logs
 airflow/logs
+spark/logs
 **/*.log
 
 # Data
 **/*.parquet
+**/*.csv
 
 # Python
 __pycache__/
