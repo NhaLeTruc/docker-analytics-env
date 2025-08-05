@@ -87,4 +87,6 @@ curl -X GET http://192.168.1.111:19120/api/v2/trees/main/entries | jq '.entries[
 # List info of namespce sales and its table sales_data_raw
 curl -X GET http://192.168.1.111:19120/api/v2/trees/main/contents/sales
 curl -X GET http://192.168.1.111:19120/api/v2/trees/main/contents/sales.sales_data_raw
+
+curl -v minio-lake:9000 2>&1 | grep -o "(.*)." | tr -d '() '
 ```

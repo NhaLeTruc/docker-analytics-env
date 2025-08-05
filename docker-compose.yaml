@@ -22,7 +22,7 @@ services:
       start_period: 10s
     volumes:
       - minio-data:/opt/bitnami/minio/data
-      - ./data_seeder/dummy:/opt/bitnami/minio/dummy      
+      - ./data_seeder/dummy:/opt/bitnami/minio/dummy
     entrypoint: >
       /bin/sh -c "
       minio server /bitnami/minio/data --console-address ':9001' &
@@ -45,7 +45,7 @@ services:
     # image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-master
     # command: bin/spark-class org.apache.spark.deploy.master.Master
-    build: 
+    build:
       context: ./spark
       dockerfile: Dockerfile.jupyterlab
     env_file: .env
@@ -66,7 +66,6 @@ services:
       - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
       - SPARK_SSL_ENABLED=no
       - JUPYTER_ENABLE_LAB=yes
-      - MINIO_END_POINT=http://minio-lake:9000
     ports:
       - "8080:8080"             # Master Web UI
       - "7077:7077"             # Master Port for job submissions
@@ -139,7 +138,7 @@ services:
       - spark-logs:/tmp/spark-events
     networks:
       - lakehouse_network
- 
+
   #################
   ## Postgres DB ##
   #################
@@ -173,7 +172,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s      
+      start_period: 10s
     volumes:
       - pgadata:/var/lib/pgadmin
       - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
@@ -208,7 +207,7 @@ services:
       - QUARKUS_LOG_LEVEL=INFO
     networks:
       - lakehouse_network
-      
+
   ##############
   ## Superset ##
   ##############
@@ -217,7 +216,7 @@ services:
     env_file: .env
     build:
       context: ./superset
-      dockerfile: Dockerfile   
+      dockerfile: Dockerfile
     volumes:
       - superset_data:/app/superset_home
       - ./superset/superset_config.py:/app/superset_config.py

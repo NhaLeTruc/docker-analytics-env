@@ -6,9 +6,11 @@ up:
 
 down:
 	sudo docker compose down --volumes --remove-orphans
+	sudo docker network prune -f
 
 deep_clean:
 	sudo docker compose down --volumes --remove-orphans
+	sudo docker network prune -f
 	sudo docker builder prune -fa
 
 spark_submit:
