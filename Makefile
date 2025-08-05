@@ -2,14 +2,14 @@
 DC = docker compose
 
 up:
-	sudo docker compose up -d
+	sudo $(DC) up -d
 
 down:
-	sudo docker compose down --volumes --remove-orphans
+	sudo $(DC) down --volumes --remove-orphans
 	sudo docker network prune -f
 
 deep_clean:
-	sudo docker compose down --volumes --remove-orphans
+	sudo $(DC) down --volumes --remove-orphans
 	sudo docker network prune -f
 	sudo docker builder prune -fa
 
@@ -18,6 +18,3 @@ spark_submit:
 
 run-scaled:
 	make down && docker-compose up --scale spark-worker=3
-
-build-progress:
-	docker-compose build --no-cache --progress=plain
