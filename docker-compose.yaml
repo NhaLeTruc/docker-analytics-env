@@ -14,26 +14,12 @@ services:
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Web console
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     volumes:
       - minio-data:/opt/bitnami/minio/data
       - ./data_seeder/dummy:/opt/bitnami/minio/dummy
     entrypoint: >
       /bin/sh -c "
-      minio server /bitnami/minio/data --console-address ':9001' &
-      sleep 5;
-      mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      mc admin accesskey create myminio/ --access-key ${MINIO_ACCESS_KEY} --secret-key ${MINIO_SECRET_KEY} --description 'Access key for docker environment';
-      mc mb myminio/dummy;
-      mc mb myminio/datalake;
-      mc mb myminio/datalakehouse;
-      mc mb myminio/warehouse;
-      mc cp -r /opt/bitnami/minio/dummy/* myminio/dummy/;
+      minio server /bitnami/minio/data --console-address ':9001'
       tail -f /dev/null"
     networks:
       - lakehouse_network
@@ -42,29 +28,14 @@ services:
   ## Spark and Notebook ##
   ########################
   spark-master:
-    # image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-master
-    # command: bin/spark-class org.apache.spark.deploy.master.Master
     build:
       context: ./spark
       dockerfile: Dockerfile.jupyterlab
     env_file: .env
-    depends_on:
-      minio-lake:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "if bash -c '</dev/tcp/localhost/8080' && bash -c '</dev/tcp/localhost/18080' && bash -c '</dev/tcp/localhost/8888'; then exit 0; else exit 1; fi"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     environment:
       - SPARK_MODE=master
       - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=/tmp/spark-events
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
       - JUPYTER_ENABLE_LAB=yes
     ports:
       - "8080:8080"             # Master Web UI
@@ -74,14 +45,11 @@ services:
       - "8888:8888"             # JupyterLab
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./spark/logs:/tmp/spark-events
-      - ./spark_apps:/opt/bitnami/spark/apps
       - ./spark/jupyter/notebooks:/opt/bitnami/jupyter/notebooks
     entrypoint: >
       /bin/bash -c "
       /opt/bitnami/spark/sbin/start-master.sh & \
       /opt/bitnami/spark/sbin/start-history-server.sh & \
-      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='XXXXX-XXXXX-XXXXX' --NotebookApp.iopub_data_rate_limit=1000000000 & \
       tail -f /dev/null
       "
     networks:
@@ -90,52 +58,30 @@ services:
   spark-worker-1:
     image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-worker-1
-    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     env_file: .env
     depends_on:
       spark-master:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8081'"]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
     environment:
       - SPARK_MODE=worker
-      - SPARK_WORKER_CORES=${SPARK_WORKER_CORES}
-      - SPARK_WORKER_MEMORY=${SPARK_WORKER_MEMORY}
       - SPARK_MASTER_URL=spark://spark-master:7077
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./spark_apps:/opt/bitnami/spark/apps
-      - spark-logs:/tmp/spark-events
     networks:
       - lakehouse_network
 
   spark-worker-2:
     image: bitnami/spark:3.5.6-debian-12-r0
     container_name: spark-worker-2
-    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     env_file: .env
     depends_on:
       spark-master:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8081'"]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
     environment:
       - SPARK_MODE=worker
-      - SPARK_WORKER_CORES=${SPARK_WORKER_CORES}
-      - SPARK_WORKER_MEMORY=${SPARK_WORKER_MEMORY}
       - SPARK_MASTER_URL=spark://spark-master:7077
     volumes:
       - ./spark/conf/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
-      - ./spark_apps:/opt/bitnami/spark/apps
-      - spark-logs:/tmp/spark-events
     networks:
       - lakehouse_network
 
@@ -144,15 +90,6 @@ services:
   #################
   postgres:
     image: postgres:16
-    container_name: postgres-metadata
-    restart: always
-    env_file: .env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     volumes:
       - meta_data:/var/lib/postgresql/data/
     networks:
@@ -161,21 +98,13 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin4
-    env_file: .env
     ports:
       - "5050:80"
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "80"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     volumes:
       - pgadata:/var/lib/pgadmin
-      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
     networks:
       - lakehouse_network
 
@@ -190,19 +119,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/19120'"]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
     environment:
-      - NESSIE_VERSION_STORE_TYPE=JDBC
       - QUARKUS_PROFILE=dev
       - QUARKUS_HTTP_PORT=19120
-      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      - QUARKUS_DATASOURCE_USERNAME=${POSTGRES_USER}
-      - QUARKUS_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - QUARKUS_LOG_CONSOLE_FORMAT=%d{yyyy-MM-dd HH:mm:ss} %-5p [%c{1.}] (%t) %s%e%n
       - QUARKUS_LOG_LEVEL=INFO
     networks:
@@ -213,24 +132,16 @@ services:
   ##############
   superset:
     container_name: superset
-    env_file: .env
     build:
       context: ./superset
       dockerfile: Dockerfile
     volumes:
       - superset_data:/app/superset_home
-      - ./superset/superset_config.py:/app/superset_config.py
     ports:
       - "8088:8088"
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8088'"]
-      interval: 15s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
     networks:
       - lakehouse_network
 
